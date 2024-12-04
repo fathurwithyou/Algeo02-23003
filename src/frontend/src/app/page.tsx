@@ -1,7 +1,7 @@
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      
+    <div className="min-h-screen  w-full">
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil deserunt expedita magnam assumenda ullam, quia dicta maiores temporibus, molestiae illum adipisci dolore saepe nesciunt quidem nam. Minima in veritatis ullam quia vitae magni quam laudantium unde numquam quo. Id, hic eos! Temporibus sint eius repellat, reiciendis accusamus harum recusandae voluptas enim. Fuga obcaecati voluptates pariatur quibusdam enim velit ea ex non, perferendis molestias reiciendis accusantium consequatur natus et eius vel corrupti optio doloremque, maiores consectetur magni possimus. Doloremque nulla dicta excepturi, itaque nam eveniet, numquam porro quibusdam facere, cumque doloribus architecto quasi quae officia eligendi dolorem natus deleniti voluptates labore neque iste. Illum dolor similique deleniti eos esse impedit minus possimus ut doloremque delectus, architecto, a natus ullam odit harum id dolorum neque quas sapiente vero hic. Ab dolore, debitis nostrum voluptate beatae optio eos ducimus, corporis officia aut perspiciatis vitae quos laborum autem! Quidem molestiae dolor exercitationem praesentium explicabo rem necessitatibus, alias eum natus dolorem, ipsam fugit cum? Porro et saepe odio sit hic libero vel obcaecati neque ipsa autem expedita, cumque vitae, esse sed maiores sunt doloribus maxime illo? Eius laborum quis, mollitia voluptates minima omnis quasi, ducimus pariatur dignissimos, aut dolorum vero distinctio quia asperiores iure provident.
     </div>
   );
 }
