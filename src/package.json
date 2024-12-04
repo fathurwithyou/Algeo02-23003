@@ -1,0 +1,14 @@
+{
+  "name": "salu",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+  "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && python main.py\""
+},
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
