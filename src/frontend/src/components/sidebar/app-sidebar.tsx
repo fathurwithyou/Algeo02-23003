@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -9,9 +9,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { SaluSidebarContent } from "./sidebarContent"
-import { ThemeTogglerBtn } from "../theme/ThemeTogglerBtn"
+} from "@/components/ui/sidebar";
+import { SaluSidebarContent } from "./sidebarContent";
+import { ThemeTogglerBtn } from "../theme/ThemeTogglerBtn";
 
 // Menu items.
 const items = [
@@ -40,15 +40,16 @@ const items = [
     url: "#",
     icon: Settings,
   },
-]
-
+];
 
 export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="">SALU  <ThemeTogglerBtn /></SidebarGroupLabel>
+          <SidebarGroupLabel className="">
+            SALU <ThemeTogglerBtn />
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SaluSidebarContent />
@@ -68,5 +69,5 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
