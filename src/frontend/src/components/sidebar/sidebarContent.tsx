@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useImagePreviewStore } from "@/store/useImagePreviewStore";
 import { ImageForm } from "../form/ImageForm";
 import { SongForm } from "../form/SongForm";
+import { MapperForm } from "../form/MapperForm";
 
 // image
 export const SaluSidebarContent = () => {
@@ -20,6 +21,7 @@ export const SaluSidebarContent = () => {
       )}
       <ImageForm />
       <SongForm />
+      <MapperForm />
     </div>
   );
 };
