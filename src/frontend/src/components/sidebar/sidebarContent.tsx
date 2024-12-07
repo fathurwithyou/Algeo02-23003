@@ -1,14 +1,14 @@
-"use client"
-import Image from "next/image"
-import { ImageForm } from "../form/ImageForm"
-import { useImagePreviewStore } from "@/store/useImagePreviewStore"
+"use client";
+import Image from "next/image";
+import { useImagePreviewStore } from "@/store/useImagePreviewStore";
+import { ImageForm } from "../form/ImageForm";
+import { SongForm } from "../form/SongForm";
 
 // image
 export const SaluSidebarContent = () => {
-  const { image } = useImagePreviewStore()
+  const { image } = useImagePreviewStore();
   return (
     <div>
-
       {/* <InputFile /> */}
       {image && (
         <Image
@@ -17,9 +17,9 @@ export const SaluSidebarContent = () => {
           src={URL.createObjectURL(image)}
           alt="Preview"
         />
-      )
-      }
+      )}
       <ImageForm />
+      <SongForm />
     </div>
-  )
-}
+  );
+};
