@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import AudioPlayer from "../components/audio/audio-player";
+import SongCard from "@/components/ui/song-card";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -64,14 +65,12 @@ export default function Home() {
         <ul>
           {audioFiles.length > 0 ? (
             audioFiles.map((file, index) => (
-              <li key={index} className="mb-2">
-                <button
-                  className="text-blue-500 underline"
-                  onClick={() => handleFileSelect(file)}
-                  disabled={loading} // Disable button while loading
-                >
-                  {file}
-                </button>
+              <li key={index}>
+                <SongCard
+                  fileName={file}
+                  onPlay={() => handleFileSelect(file)}
+                  isLoading={loading}
+                />
               </li>
             ))
           ) : (
