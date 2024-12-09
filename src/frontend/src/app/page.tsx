@@ -59,24 +59,27 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between">
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
-        <ul>
-          {audioFiles.length > 0 ? (
-            audioFiles.map((file, index) => (
-              <li key={index}>
-                <SongCard
-                  fileName={file}
-                  onPlay={() => handleFileSelect(file)}
-                  isLoading={loading}
-                />
-              </li>
-            ))
-          ) : (
-            <p>No audio files available.</p>
-          )}
-        </ul>
+    <div className="flex-grow flex flex-col justify-between">
+      <div className="h-full p-4 flex flex-col justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
+          <ul>
+            {audioFiles.length > 0 ? (
+              audioFiles.map((file, index) => (
+                <li key={index}>
+                  <SongCard
+                    index={(currentPage - 1) * ITEMS_PER_PAGE + index}
+                    fileName={file}
+                    onPlay={() => handleFileSelect(file)}
+                    isLoading={loading}
+                  />
+                </li>
+              ))
+            ) : (
+              <p>No audio files available.</p>
+            )}
+          </ul>
+        </div>
 
         <div className="flex justify-center mt-4">
           {totalPages > 1 &&

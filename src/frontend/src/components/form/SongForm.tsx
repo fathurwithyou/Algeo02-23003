@@ -17,25 +17,27 @@ import AudioPlayer from "../audio/audio-player";
 
 // Validation schema
 export const formSchema = z.object({
-  song: z.instanceof(File).refine((file) => file?.type.startsWith("audio/"), {
-    message: "Please upload a valid audio file.",
-  }),
+  songs: z
+    .array(z.instanceof(File))
+    .refine((files) => files.every((file) => file?.type.startsWith("audio/")), {
+      message: "Please upload valid audio files.",
+    }),
 });
 
 export function SongForm() {
-  // Define the form using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      song: undefined,
+      songs: [],
     },
   });
 
-  // Submit handler
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const formData = new FormData();
-      formData.append("file", values.song);
+      values.songs.forEach((file) => {
+        formData.append("files", file);
+      });
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -43,35 +45,38 @@ export function SongForm() {
       });
 
       if (response.ok) {
-        console.log("File uploaded successfully");
-        form.reset({ song: undefined }); // Reset the form after successful upload
+        console.log("Files uploaded successfully");
+        form.reset({ songs: [] });
       } else {
         console.error("File upload failed");
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading files:", error);
     }
   }
 
   return (
     <Form {...form}>
-      {form.watch("song") ? <AudioPlayer file={form.watch("song")} /> : null}
+      {form.watch("songs")?.length > 0 ? (
+        <AudioPlayer file={form.watch("songs")[0]} />
+      ) : null}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="song"
+          name="songs"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload Song</FormLabel>
+              <FormLabel>Upload Songs</FormLabel>
               <FormControl>
                 <Input
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    field.onChange(file); // Update form value
+                    const files = Array.from(e.target.files || []);
+                    field.onChange(files); // Update form value
                   }}
-                  id="song"
+                  id="songs"
                   type="file"
                   accept="audio/*"
+                  multiple
                 />
               </FormControl>
               <FormMessage />

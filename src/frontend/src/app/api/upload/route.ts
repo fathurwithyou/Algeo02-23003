@@ -1,31 +1,27 @@
 import { NextResponse } from "next/server";
 import path from "path";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {
   try {
-    // Parse the incoming form data
     const formData = await req.formData();
-    console.log("FormData keys:", Array.from(formData.keys())); // Debugging
+    console.log("FormData keys:", Array.from(formData.keys()));
 
-    // Retrieve the file from the form data
-    const file = formData.get("file");
+    const files = formData.getAll("files");
 
-    if (!file || !(file instanceof File)) {
-      console.error("Invalid file received:", file);
+    if (
+      !files ||
+      files.length === 0 ||
+      !files.every((file) => file instanceof File)
+    ) {
+      console.error("Invalid files received:", files);
       return NextResponse.json(
-        { error: "No valid file received." },
+        { error: "No valid files received." },
         { status: 400 }
       );
     }
 
-    // Prepare file metadata
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = file.name.trim().replace(/\s+/g, "_"); // Sanitize filename
-    const extension: string = path.extname(filename).toLowerCase();
-
-    // Determine the save directory based on file type
     const directories: { [key: string]: string } = {
       ".jpg": "public/images/",
       ".jpeg": "public/images/",
@@ -36,23 +32,27 @@ export const POST = async (req: NextRequest) => {
       ".m4a": "public/songs/",
       ".mid": "public/songs/",
     };
-    const directory = directories[extension] || "public/uploads/";
 
-    // Ensure the directory exists before saving the file
-    const fullPath = path.join(process.cwd(), directory);
-    console.log(`Saving file to ${fullPath}${filename}`);
+    for (const file of files) {
+      const buffer = Buffer.from(await (file as File).arrayBuffer());
+      const filename = (file as File).name.trim().replace(/\s+/g, "_");
+      const extension: string = path.extname(filename).toLowerCase();
+      const directory = directories[extension] || "public/uploads/";
 
-    await writeFile(path.join(fullPath, filename), buffer);
+      const fullPath = path.join(process.cwd(), directory);
+      await mkdir(fullPath, { recursive: true });
+      console.log(`Saving file to ${fullPath}${filename}`);
 
-    // Respond with success
+      await writeFile(path.join(fullPath, filename), buffer);
+    }
+
     return NextResponse.json({
-      message: "File uploaded successfully",
+      message: "Files uploaded successfully",
       status: 201,
     });
   } catch (error) {
     console.error("Error occurred during file upload:", error);
 
-    // Respond with an error
     return NextResponse.json({ error: "File upload failed", status: 500 });
   }
 };

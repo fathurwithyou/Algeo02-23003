@@ -16,9 +16,11 @@ import { Input } from "@/components/ui/input";
 
 // Validation schema
 export const formSchema = z.object({
-  mapper: z.instanceof(File).refine((file) => file?.type === "text/plain", {
-    message: "Please upload a valid .txt file.",
-  }),
+  mapper: z
+    .array(z.instanceof(File))
+    .refine((files) => files.every((file) => file?.type === "text/plain"), {
+      message: "Please upload valid .txt files.",
+    }),
 });
 
 export function MapperForm() {
@@ -26,7 +28,7 @@ export function MapperForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      mapper: undefined,
+      mapper: [],
     },
   });
 
@@ -34,7 +36,9 @@ export function MapperForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const formData = new FormData();
-      formData.append("file", values.mapper);
+      values.mapper.forEach((file) => {
+        formData.append("files", file);
+      });
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -42,13 +46,13 @@ export function MapperForm() {
       });
 
       if (response.ok) {
-        console.log("File uploaded successfully");
-        form.reset({ mapper: undefined }); // Reset the form after successful upload
+        console.log("Files uploaded successfully");
+        form.reset({ mapper: [] }); // Reset the form after successful upload
       } else {
         console.error("File upload failed");
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading files:", error);
     }
   }
 
@@ -64,12 +68,13 @@ export function MapperForm() {
               <FormControl>
                 <Input
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    field.onChange(file); // Update form value
+                    const files = Array.from(e.target.files || []);
+                    field.onChange(files); // Update form value
                   }}
                   id="mapper"
                   type="file"
                   accept=".txt"
+                  multiple
                 />
               </FormControl>
               <FormMessage />

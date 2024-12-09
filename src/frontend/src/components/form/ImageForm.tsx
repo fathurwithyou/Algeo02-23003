@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  // FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,42 +16,44 @@ import { Input } from "@/components/ui/input";
 import { useImagePreviewStore } from "@/store/useImagePreviewStore";
 
 export const formSchema = z.object({
-  image: z.instanceof(File).refine((file) => file?.type.startsWith("image/"), {
-    message: "Please upload a valid image file.",
-  }),
+  images: z
+    .array(z.instanceof(File))
+    .refine((files) => files.every((file) => file?.type.startsWith("image/")), {
+      message: "Please upload valid image files.",
+    }),
 });
 
 export function ImageForm() {
   const { setImage } = useImagePreviewStore();
-  // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      image: undefined,
+      images: [],
     },
   });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const formData = new FormData();
-    formData.append("file", values.image);
-
-    fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log("File uploaded successfully");
-          form.reset(); // Reset the form
-          setImage(null); // Clear the preview
-        } else {
-          console.error("File upload failed");
-        }
-      })
-      .catch((error) => {
-        console.error("Error uploading file:", error);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const formData = new FormData();
+      values.images.forEach((file) => {
+        formData.append("files", file);
       });
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        console.log("Files uploaded successfully");
+        form.reset({ images: [] });
+        setImage(null);
+      } else {
+        console.error("File upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading files:", error);
+    }
   }
 
   return (
@@ -60,26 +61,26 @@ export function ImageForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="image"
+          name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload image</FormLabel>
+              <FormLabel>Upload Images</FormLabel>
               <FormControl>
-                {/* <Input placeholder="shadcn" {...field} /> */}
                 <Input
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    field.onChange(file); // Update form value
-                    setImage(file ?? null); // Update preview store
+                    const files = Array.from(e.target.files || []);
+                    field.onChange(files);
+                    const firstImageFile = files.find((file) =>
+                      file.type.startsWith("image/")
+                    );
+                    setImage(firstImageFile ?? null);
                   }}
-                  id="picture"
+                  id="images"
                   type="file"
                   accept="image/*"
+                  multiple
                 />
               </FormControl>
-              {/* <FormDescription>
-                This is your public display name.
-              </FormDescription> */}
               <FormMessage />
             </FormItem>
           )}

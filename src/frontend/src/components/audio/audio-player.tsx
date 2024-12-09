@@ -109,7 +109,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
   return (
     <div className="max-w-md w-full space-y-4">
       <Card>
-        <CardContent className="flex flex-col items-center justify-center gap-2 p-8">
+        <CardContent className="flex flex-col items-center justify-center gap-2">
           <div className="text-center w-full">
             <h2 className="text-xl font-bold break-words">
               {fileName || "No Audio Selected"}
@@ -119,7 +119,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
           <div className="w-full flex justify-between items-center gap-1 text-sm text-muted-foreground">
             <span>{formatTime(currentTime)}</span>
             <div
-              className="w-full"
+              className="w-full h-5 flex items-center justify-center"
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
               onMouseMove={(event) =>
@@ -137,15 +137,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
               size="icon"
               onClick={handlePlayPause}
               disabled={!audioSrc}
+              className="rounded-full p-2"
             >
               {isPlaying ? (
-                <PauseIcon className="w-6 h-6" />
+                <PauseIcon className="w-6 h-6 scale-[1.5]" />
               ) : (
-                <PlayIcon className="w-6 h-6" />
+                <PlayIcon className="w-6 h-6 scale-[1.5]" />
               )}
             </Button>
             <div className="flex items-center gap-2">
-              <Volume2Icon className="w-6 h-6" />
+              <Volume2Icon className="w-4 h-4" />
               <input
                 type="range"
                 min="0"
@@ -153,7 +154,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
                 step="0.01"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="w-24"
+                className="w-24 h-2"
               />
             </div>
           </div>
