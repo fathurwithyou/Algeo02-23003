@@ -1,0 +1,33 @@
+{
+  "DATA_DIR": "./data",
+  "LOG_DIR": "./logs",
+  "RESULTS_DIR": "./results",
+  "SEED": 42,
+
+  "AUDIO_CONFIG": {
+    "frame_size": 1024,
+    "hop_size": 512,
+    "sampling_rate": 44100,
+    "supported_formats": [".wav", ".mp3", ".mid"],
+    "database_folder": "./data/audio",
+    "query_folder": "./data/audio_query"
+  },
+
+  "IMAGE_CONFIG": {
+    "resize_shape": [64, 64],
+    "color_space": "RGB",
+    "supported_formats": [".jpg", ".png"],
+    "database_folder": "./data/image",
+    "query_folder": "./data/image_query"
+  },
+
+  "FEATURE_EXTRACTION": {
+    "audio_features": ["atb", "rtb", "ftb"],
+    "image_features": ["color_histogram"]
+  },
+
+  "SIMILARITY_CONFIG": {
+    "metric": "cosine",
+    "top_k": 5
+  }
+}

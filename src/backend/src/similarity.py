@@ -1,14 +1,17 @@
 import numpy as np
 
-
-class Similarity:
+class SimilarityCalculator:
     @staticmethod
-    def cosine_similarity(vector1: np.ndarray, vector2: np.ndarray) -> float:
-        dot_product = np.dot(vector1, vector2)
-        norm1 = np.linalg.norm(vector1)
-        norm2 = np.linalg.norm(vector2)
-        return dot_product / (norm1 * norm2)
+    def compute_euclidean_distance(projections, query_projection):
+        """Compute Euclidean distances between query image and all dataset images."""
+        return np.linalg.norm(projections - query_projection, axis=1)
 
     @staticmethod
-    def euclidean_distance(vector1: np.ndarray, vector2: np.ndarray) -> float:
-        return np.linalg.norm(vector1 - vector2)
+    def rank_similarities(distances, image_paths, limit=5, max_distance=float('inf')):
+        """Rank images by similarity and return the top results."""
+        indices = np.argsort(distances)
+        results = [
+            (image_paths[i], distances[i])
+            for i in indices if distances[i] <= max_distance
+        ][:limit]
+        return results
