@@ -13,29 +13,30 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useImagePreviewStore } from "@/store/useImagePreviewStore";
 
+// Validation schema
 export const formSchema = z.object({
-  images: z
+  mapper: z
     .array(z.instanceof(File))
-    .refine((files) => files.every((file) => file?.type.startsWith("image/")), {
-      message: "Please upload valid image files.",
+    .refine((files) => files.every((file) => file?.type === "text/plain"), {
+      message: "Please upload valid .txt files.",
     }),
 });
 
-export function ImageForm() {
-  const { setImage } = useImagePreviewStore();
+export function MapperForm() {
+  // Define the form using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      images: [],
+      mapper: [],
     },
   });
 
+  // Submit handler
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const formData = new FormData();
-      values.images.forEach((file) => {
+      values.mapper.forEach((file) => {
         formData.append("files", file);
       });
 
@@ -46,8 +47,7 @@ export function ImageForm() {
 
       if (response.ok) {
         console.log("Files uploaded successfully");
-        form.reset({ images: [] });
-        setImage(null);
+        form.reset({ mapper: [] }); // Reset the form after successful upload
       } else {
         console.error("File upload failed");
       }
@@ -61,23 +61,19 @@ export function ImageForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="images"
+          name="mapper"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload Images</FormLabel>
+              <FormLabel>Upload Mapper</FormLabel>
               <FormControl>
                 <Input
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
-                    field.onChange(files);
-                    const firstImageFile = files.find((file) =>
-                      file.type.startsWith("image/")
-                    );
-                    setImage(firstImageFile ?? null);
+                    field.onChange(files); // Update form value
                   }}
-                  id="images"
+                  id="mapper"
                   type="file"
-                  accept="image/*"
+                  accept=".txt"
                   multiple
                 />
               </FormControl>

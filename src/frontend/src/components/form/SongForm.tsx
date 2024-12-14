@@ -13,29 +13,29 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useImagePreviewStore } from "@/store/useImagePreviewStore";
+import AudioPlayer from "../audio/audio-player";
 
+// Validation schema
 export const formSchema = z.object({
-  images: z
+  songs: z
     .array(z.instanceof(File))
-    .refine((files) => files.every((file) => file?.type.startsWith("image/")), {
-      message: "Please upload valid image files.",
+    .refine((files) => files.every((file) => file?.type.startsWith("audio/")), {
+      message: "Please upload valid audio files.",
     }),
 });
 
-export function ImageForm() {
-  const { setImage } = useImagePreviewStore();
+export function SongForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      images: [],
+      songs: [],
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const formData = new FormData();
-      values.images.forEach((file) => {
+      values.songs.forEach((file) => {
         formData.append("files", file);
       });
 
@@ -46,8 +46,7 @@ export function ImageForm() {
 
       if (response.ok) {
         console.log("Files uploaded successfully");
-        form.reset({ images: [] });
-        setImage(null);
+        form.reset({ songs: [] });
       } else {
         console.error("File upload failed");
       }
@@ -58,26 +57,25 @@ export function ImageForm() {
 
   return (
     <Form {...form}>
+      {form.watch("songs")?.length > 0 ? (
+        <AudioPlayer file={form.watch("songs")[0]} />
+      ) : null}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="images"
+          name="songs"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload Images</FormLabel>
+              <FormLabel>Upload Songs</FormLabel>
               <FormControl>
                 <Input
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
-                    field.onChange(files);
-                    const firstImageFile = files.find((file) =>
-                      file.type.startsWith("image/")
-                    );
-                    setImage(firstImageFile ?? null);
+                    field.onChange(files); // Update form value
                   }}
-                  id="images"
+                  id="songs"
                   type="file"
-                  accept="image/*"
+                  accept="audio/*"
                   multiple
                 />
               </FormControl>

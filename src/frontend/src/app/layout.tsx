@@ -1,6 +1,6 @@
-import { ThemeProvider } from "@/components/theme/theme-provider"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/sidebar/app-sidebar"
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -39,7 +39,7 @@ export default function RootLayout({
         >
           <SidebarProvider>
             <AppSidebar />
-            <main>
+            <main className="w-full min-h-screen flex flex-col">
               <SidebarTrigger />
               {children}
             </main>

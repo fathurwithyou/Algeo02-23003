@@ -1,7 +1,114 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import AudioPlayer from "../components/audio/audio-player";
+import SongCard from "@/components/ui/song-card";
+
+const ITEMS_PER_PAGE = 5;
+
 export default function Home() {
+  const [audioFiles, setAudioFiles] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false); // Loading state for fetch requests
+
+  useEffect(() => {
+    const fetchAudioFiles = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/audio-files?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
+        );
+        const data = await response.json();
+        setAudioFiles(data.files);
+        setTotalPages(data.totalPages);
+      } catch (error) {
+        console.error("Error fetching audio files:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAudioFiles();
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleFileSelect = async (fileName: string) => {
+    setLoading(true); // Start loading while fetching the file
+    try {
+      console.log("Fetching file:", fileName);
+      const filePath = `/songs/${fileName}`;
+      const response = await fetch(filePath);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch the file.");
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: blob.type });
+      setSelectedFile(file);
+    } catch (error) {
+      console.error("Error fetching file:", error);
+    } finally {
+      setLoading(false); // Stop loading after fetching is done
+    }
+  };
+
   return (
-    <div className="min-h-screen  w-full">
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Nihil deserunt expedita magnam assumenda ullam, quia dicta maiores temporibus, molestiae illum adipisci dolore saepe nesciunt quidem nam. Minima in veritatis ullam quia vitae magni quam laudantium unde numquam quo. Id, hic eos! Temporibus sint eius repellat, reiciendis accusamus harum recusandae voluptas enim. Fuga obcaecati voluptates pariatur quibusdam enim velit ea ex non, perferendis molestias reiciendis accusantium consequatur natus et eius vel corrupti optio doloremque, maiores consectetur magni possimus. Doloremque nulla dicta excepturi, itaque nam eveniet, numquam porro quibusdam facere, cumque doloribus architecto quasi quae officia eligendi dolorem natus deleniti voluptates labore neque iste. Illum dolor similique deleniti eos esse impedit minus possimus ut doloremque delectus, architecto, a natus ullam odit harum id dolorum neque quas sapiente vero hic. Ab dolore, debitis nostrum voluptate beatae optio eos ducimus, corporis officia aut perspiciatis vitae quos laborum autem! Quidem molestiae dolor exercitationem praesentium explicabo rem necessitatibus, alias eum natus dolorem, ipsam fugit cum? Porro et saepe odio sit hic libero vel obcaecati neque ipsa autem expedita, cumque vitae, esse sed maiores sunt doloribus maxime illo? Eius laborum quis, mollitia voluptates minima omnis quasi, ducimus pariatur dignissimos, aut dolorum vero distinctio quia asperiores iure provident.
+    <div className="flex-grow flex flex-col justify-between">
+      <div className="h-full p-4 flex flex-col justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
+          <ul>
+            {audioFiles.length > 0 ? (
+              audioFiles.map((file, index) => (
+                <li key={index}>
+                  <SongCard
+                    index={(currentPage - 1) * ITEMS_PER_PAGE + index}
+                    fileName={file}
+                    onPlay={() => handleFileSelect(file)}
+                    isLoading={loading}
+                  />
+                </li>
+              ))
+            ) : (
+              <p>No audio files available.</p>
+            )}
+          </ul>
+        </div>
+
+        <div className="flex justify-center mt-4">
+          {totalPages > 1 &&
+            Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index}
+                className={`px-4 py-2 mx-1 ${
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                }`}
+                onClick={() => handlePageChange(index + 1)}
+                disabled={loading} // Disable page navigation while loading
+              >
+                {index + 1}
+              </button>
+            ))}
+        </div>
+      </div>
+
+      <div className="w-full h-fit flex flex-row justify-center items-center">
+        <AudioPlayer file={selectedFile} />
+      </div>
+
+      {/* {loading && (
+        <div className="absolute top-0 left-0 w-full h-full bg-gray-300 opacity-50 flex justify-center items-center text-xl">
+          Loading...
+        </div>
+      )} */}
     </div>
   );
 }
