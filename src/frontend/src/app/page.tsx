@@ -10,7 +10,7 @@ export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [loading, setLoading] = useState(false); // Loading state for fetch requests
 
   useEffect(() => {
@@ -37,25 +37,9 @@ export default function Home() {
     setCurrentPage(page);
   };
 
-  const handleFileSelect = async (fileName: string) => {
-    setLoading(true); // Start loading while fetching the file
-    try {
-      console.log("Fetching file:", fileName);
-      const filePath = `/songs/${fileName}`;
-      const response = await fetch(filePath);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch the file.");
-      }
-
-      const blob = await response.blob();
-      const file = new File([blob], fileName, { type: blob.type });
-      setSelectedFile(file);
-    } catch (error) {
-      console.error("Error fetching file:", error);
-    } finally {
-      setLoading(false); // Stop loading after fetching is done
-    }
+  const handleFileSelect = (fileName: string) => {
+    const filePath = `/songs/${fileName}`;
+    setSelectedFilePath(filePath); // Pass the file path as a string
   };
 
   return (
@@ -64,7 +48,7 @@ export default function Home() {
         <div>
           <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
           <ul>
-            {audioFiles.length > 0 ? (
+            {audioFiles?.length ?? 0 > 0 ? (
               audioFiles.map((file, index) => (
                 <li key={index}>
                   <SongCard
@@ -101,14 +85,14 @@ export default function Home() {
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
-        <AudioPlayer file={selectedFile} />
+        <AudioPlayer src={selectedFilePath} />
       </div>
 
       {/* {loading && (
-        <div className="absolute top-0 left-0 w-full h-full bg-gray-300 opacity-50 flex justify-center items-center text-xl">
-          Loading...
-        </div>
-      )} */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gray-300 opacity-50 flex justify-center items-center text-xl">
+            Loading...
+          </div>
+        )} */}
     </div>
   );
 }
