@@ -39,7 +39,7 @@ export function ImageForm() {
         formData.append("files", file);
       });
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/uploadImage", {
         method: "POST",
         body: formData,
       });

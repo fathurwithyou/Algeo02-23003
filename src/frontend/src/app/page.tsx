@@ -52,7 +52,7 @@ export default function Home() {
               audioFiles.map((file, index) => (
                 <li key={index}>
                   <SongCard
-                    index={(currentPage - 1) * ITEMS_PER_PAGE + index}
+                    // index={(currentPage - 1) * ITEMS_PER_PAGE + index}
                     fileName={file}
                     onPlay={() => handleFileSelect(file)}
                     isLoading={loading}

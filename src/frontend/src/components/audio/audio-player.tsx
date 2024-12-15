@@ -43,12 +43,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
     }
   }, [file, src]);
 
-  useEffect(() => {
-    if (audioSrc && audioRef.current) {
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
-  }, [audioSrc]);
+  // useEffect(() => {
+  //   if (audioSrc && audioRef.current) {
+  //     setProgress(0);
+  //     setCurrentTime(0);
+  //     setIsPlaying(false);
+  //     audioRef.current.pause();
+  //     audioRef.current.play();
+  //     setIsPlaying(true);
+  //   }
+  // }, [audioSrc]);
 
   const handlePlayPause = () => {
     if (isPlaying) {

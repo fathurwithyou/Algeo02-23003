@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
 
@@ -6,14 +7,16 @@ type SongCardProps = {
   fileName: string;
   onPlay: () => void;
   isLoading: boolean;
-  index: number;
+  // index: number;
+  image?: string;
 };
 
 const SongCard: React.FC<SongCardProps> = ({
   fileName,
   onPlay,
   isLoading,
-  index,
+  // index,
+  image,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -34,7 +37,12 @@ const SongCard: React.FC<SongCardProps> = ({
         </Button>
       ) : (
         <div className="w-9 h-9 flex items-center justify-center text-gray-500">
-          {index + 1}
+          {/* {index + 1} */}
+          {image ? (
+            <Image src={image} alt="Song Image" width={36} height={36} />
+          ) : (
+            <p>Image Not Provided</p>
+          )}
         </div>
       )}
       <span className="text-lg font-medium">{fileName}</span>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import path from "path";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, readdir, unlink } from "fs/promises";
 import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {
@@ -22,27 +22,32 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const directories: { [key: string]: string } = {
-      ".jpg": "public/images/",
-      ".jpeg": "public/images/",
-      ".png": "public/images/",
-      ".txt": "public/mapper/",
-      ".wav": "public/songs/",
-      ".mp3": "public/songs/",
-      ".m4a": "public/songs/",
-      ".mid": "public/songs/",
-    };
+    const audioExtensions = [".wav", ".mp3", ".m4a", ".mid"];
+    const directory = "public/songs/";
 
     for (const file of files) {
       const buffer = Buffer.from(await (file as File).arrayBuffer());
       const filename = (file as File).name.trim().replace(/\s+/g, "_");
       const extension: string = path.extname(filename).toLowerCase();
-      const directory = directories[extension] || "public/uploads/";
+
+      if (!audioExtensions.includes(extension)) {
+        console.error("Invalid file type received:", extension);
+        return NextResponse.json(
+          { error: "Invalid file type received." },
+          { status: 400 }
+        );
+      }
 
       const fullPath = path.join(process.cwd(), directory);
       await mkdir(fullPath, { recursive: true });
-      console.log(`Saving file to ${fullPath}${filename}`);
 
+      // Delete previous files in the directory
+      const existingFiles = await readdir(fullPath);
+      for (const existingFile of existingFiles) {
+        await unlink(path.join(fullPath, existingFile));
+      }
+
+      console.log(`Saving file to ${fullPath}${filename}`);
       await writeFile(path.join(fullPath, filename), buffer);
     }
 

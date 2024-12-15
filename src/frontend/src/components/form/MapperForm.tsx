@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,6 +25,9 @@ export const formSchema = z.object({
 });
 
 export function MapperForm() {
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [inputText, setInputText] = useState("Choose files");
+
   // Define the form using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,7 +44,7 @@ export function MapperForm() {
         formData.append("files", file);
       });
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/uploadMapper", {
         method: "POST",
         body: formData,
       });
@@ -48,6 +52,9 @@ export function MapperForm() {
       if (response.ok) {
         console.log("Files uploaded successfully");
         form.reset({ mapper: [] }); // Reset the form after successful upload
+        setUploadSuccess(true); // Show success message
+        setInputText("Choose files"); // Revert input text
+        setTimeout(() => setUploadSuccess(false), 3000); // Hide after 3 seconds
       } else {
         console.error("File upload failed");
       }
@@ -69,7 +76,13 @@ export function MapperForm() {
                 <Input
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
-                    field.onChange(files); // Update form value
+                    field.onChange(files);
+                    setInputText(
+                      files.length > 0
+                        ? `${files.length} file(s) selected`
+                        : "Choose files"
+                    );
+                    e.target.value = "";
                   }}
                   id="mapper"
                   type="file"
@@ -81,6 +94,9 @@ export function MapperForm() {
             </FormItem>
           )}
         />
+        {uploadSuccess && (
+          <div className="text-green-500">Files uploaded successfully!</div>
+        )}
         <Button type="submit">Submit</Button>
       </form>
     </Form>
