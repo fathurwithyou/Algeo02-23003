@@ -26,7 +26,7 @@ export const formSchema = z.object({
 
 export function MapperForm() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [inputText, setInputText] = useState("Choose files");
+  // const [inputText, setInputText] = useState("Choose files");
 
   // Define the form using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,7 +53,7 @@ export function MapperForm() {
         console.log("Files uploaded successfully");
         form.reset({ mapper: [] }); // Reset the form after successful upload
         setUploadSuccess(true); // Show success message
-        setInputText("Choose files"); // Revert input text
+        // setInputText("Choose files"); // Revert input text
         setTimeout(() => setUploadSuccess(false), 3000); // Hide after 3 seconds
       } else {
         console.error("File upload failed");
@@ -77,11 +77,11 @@ export function MapperForm() {
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     field.onChange(files);
-                    setInputText(
-                      files.length > 0
-                        ? `${files.length} file(s) selected`
-                        : "Choose files"
-                    );
+                    // setInputText(
+                    //   files.length > 0
+                    //     ? `${files.length} file(s) selected`
+                    //     : "Choose files"
+                    // );
                     e.target.value = "";
                   }}
                   id="mapper"
