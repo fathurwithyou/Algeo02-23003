@@ -3,8 +3,11 @@
 import React, { useState, useEffect, use } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
+import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
+
 
 const ITEMS_PER_PAGE = 5;
+const RECORD_TIME = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
@@ -25,6 +28,9 @@ export default function Home() {
   >([]);
   const [isPredictImage, setIsPredictImage] = useState(false);
   const [isPredictAudio, setIsPredictAudio] = useState(false);
+  const recorderControls = useAudioRecorder();
+
+  const [audioUrl, setAudioUrl] = useState<any>(null);
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -184,6 +190,24 @@ export default function Home() {
     startIndex + ITEMS_PER_PAGE
   );
 
+
+  const recordComplete = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    setAudioUrl(url); // Store the URL in state
+    // download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "audio.wav";
+    a.click();
+
+  }
+
+  useEffect(() => {
+    if (recorderControls.recordingTime == RECORD_TIME + 1) {
+      recorderControls.stopRecording();
+    }
+  }, [recorderControls.recordingTime]);
+
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
@@ -207,6 +231,19 @@ export default function Home() {
           >
             Reset Predictions
           </button>
+          {/* recorder */}
+
+          <div style={{ display: "none" }}>
+            <AudioRecorder
+              onRecordingComplete={(blob) => recordComplete(blob)}
+              recorderControls={recorderControls}
+            />
+          </div>
+          <button onClick={recorderControls.startRecording}>Start recording</button>
+
+
+
+
 
           <div className="mt-4">
             <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
@@ -238,7 +275,7 @@ export default function Home() {
                       <SongCard
                         audioName={file}
                         picName={useMapper ? mapper[file] : undefined}
-                        onPlay={() => {}}
+                        onPlay={() => { }}
                         isLoading={loading}
                       />
                     </li>
@@ -256,7 +293,7 @@ export default function Home() {
                       picName={result.picName}
                       distance={result.distance}
                       mapper={mapper}
-                      onPlay={() => {}}
+                      onPlay={() => { }}
                       isLoading={loading}
                     />
                   </li>
@@ -271,7 +308,7 @@ export default function Home() {
                       audioName={result.audioName}
                       similarity={result.similarity}
                       mapper={mapper}
-                      onPlay={() => {}}
+                      onPlay={() => { }}
                       isLoading={loading}
                     />
                   </li>
@@ -287,11 +324,10 @@ export default function Home() {
               Array.from({ length: totalPages }, (_, index) => (
                 <button
                   key={index}
-                  className={`px-4 py-2 mx-1 ${
-                    currentPage === index + 1
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 mx-1 ${currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200"
+                    }`}
                   onClick={() => handlePageChange(index + 1)}
                   disabled={loading} // Disable page navigation while loading
                 >
@@ -305,6 +341,6 @@ export default function Home() {
       <div className="w-full h-fit flex flex-row justify-center items-center">
         <AudioPlayer file={selectedFile} />
       </div>
-    </div>
+    </div >
   );
 }
