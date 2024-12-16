@@ -13,9 +13,10 @@
   },
 
   "IMAGE_CONFIG": {
-    "resize_shape": [64, 64],
+    "resize_shape": [50, 50],
     "color_space": "RGB",
     "supported_formats": [".jpg", ".png", ".jpeg"],
+    "n_components": 50,
     "database_folder": "./data/image",
     "query_folder": "./data/image_query"
   },

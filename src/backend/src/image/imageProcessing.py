@@ -8,7 +8,7 @@ with open("settings.json", "r") as file:
     settings = json.load(file)
     
 class ImageProcessor:
-    def __init__(self, resize_shape=(64, 64)):
+    def __init__(self, resize_shape=(50, 50)):
         self.resize_shape = resize_shape
 
     def load_and_preprocess(self, image_dir):
@@ -59,7 +59,8 @@ class PCAProcessor:
         """Fit PCA to the image dataset using SVD."""
         self.mean_image = np.mean(images, axis=0)
         centered_data = images - self.mean_image
-        U, _, Vt = svd(centered_data, full_matrices=False)
+        cov_matrix = np.cov(centered_data, rowvar=False)
+        U, _, Vt = svd(cov_matrix, full_matrices=False)
         self.components = Vt[:self.n_components]
 
     def transform(self, images):
