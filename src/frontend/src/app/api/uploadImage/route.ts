@@ -23,7 +23,7 @@ export const POST = async (req: NextRequest) => {
     const backendUrl = "http://localhost:5000/upload/image";
 
     const backendFormData = new FormData();
-    files.forEach((file) => backendFormData.append("files", file));
+    files.forEach((file) => backendFormData.append("file", file));
 
     const response = await fetch(backendUrl, {
       method: "POST",

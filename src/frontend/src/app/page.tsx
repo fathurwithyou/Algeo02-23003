@@ -15,6 +15,16 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [useMapper, setUseMapper] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
+  const [imagePredictionResult, setImagePredictionResult] = useState<
+    { picName: string; distance: number }[]
+  >([]);
+  const [audioPredictionResult, setAudioPredictionResult] = useState<
+    { audioName: string; similarity: number }[]
+  >([]);
+  const [isPredictImage, setIsPredictImage] = useState(false);
+  const [isPredictAudio, setIsPredictAudio] = useState(false);
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -37,7 +47,7 @@ export default function Home() {
     const fetchImageFiles = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:5000/get/songs");
+        const response = await fetch("http://localhost:5000/get/images");
         if (!response.ok) {
           throw new Error("Failed to fetch image files");
         }
@@ -77,6 +87,95 @@ export default function Home() {
     setUseMapper(false);
   };
 
+  const handleFileSelect = async (fileName: string) => {
+    try {
+      const response = await fetch(`/api/audio-files?filename=${fileName}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch file");
+      }
+      const fileBlob = await response.blob();
+      const file = new File([fileBlob], fileName, { type: fileBlob.type });
+      setSelectedFile(file);
+    } catch (error) {
+      console.error("Error fetching file:", error);
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedImage(event.target.files[0]);
+    }
+  };
+
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedAudio(event.target.files[0]);
+    }
+  };
+
+  const handleImagePredict = async () => {
+    if (!selectedImage) return;
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+
+    try {
+      const response = await fetch("http://localhost:5000/predict/image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to predict image");
+      }
+
+      const result = await response.json();
+      const mappedResults = result.results.map((item: [string, number]) => ({
+        picName: item[0],
+        distance: item[1],
+      }));
+      setImagePredictionResult(mappedResults);
+      setIsPredictImage(true);
+      setIsPredictAudio(false);
+    } catch (error) {
+      console.error("Error predicting image:", error);
+    }
+  };
+
+  const handleAudioPredict = async () => {
+    if (!selectedAudio) return;
+
+    const formData = new FormData();
+    formData.append("audio", selectedAudio);
+
+    try {
+      const response = await fetch("http://localhost:5000/predict/audio", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to predict audio");
+      }
+
+      const result = await response.json();
+      const mappedResults = result.results.map((item: [string, number]) => ({
+        audioName: item[0],
+        similarity: item[1],
+      }));
+      setAudioPredictionResult(mappedResults);
+      setIsPredictAudio(true);
+      setIsPredictImage(false);
+    } catch (error) {
+      console.error("Error predicting audio:", error);
+    }
+  };
+
+  const resetPredictions = () => {
+    setIsPredictImage(false);
+    setIsPredictAudio(false);
+  };
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentAudioFiles = audioFiles.slice(
     startIndex,
@@ -100,20 +199,60 @@ export default function Home() {
           >
             Reset Mapper
           </button>
+          <button
+            className="px-4 py-2 bg-yellow-500 text-white mb-4"
+            onClick={resetPredictions}
+          >
+            Reset Predictions
+          </button>
           <ul>
-            {currentAudioFiles.length > 0 ? (
-              currentAudioFiles.map((file, index) => (
-                <li key={index}>
-                  <SongCard
-                    audioName={file}
-                    picName={useMapper ? mapper[file] : undefined}
-                    onPlay={() => {}}
-                    isLoading={loading}
-                  />
-                </li>
-              ))
-            ) : (
-              <p>No audio files available.</p>
+            {!isPredictImage && !isPredictAudio && (
+              <>
+                {currentAudioFiles.length > 0 ? (
+                  currentAudioFiles.map((file, index) => (
+                    <li key={index}>
+                      <SongCard
+                        audioName={file}
+                        picName={useMapper ? mapper[file] : undefined}
+                        onPlay={() => {}}
+                        isLoading={loading}
+                      />
+                    </li>
+                  ))
+                ) : (
+                  <p>No audio files available.</p>
+                )}
+              </>
+            )}
+            {isPredictImage && !isPredictAudio && (
+              <ul>
+                {imagePredictionResult.map((result, index) => (
+                  <li key={index}>
+                    <SongCard
+                      picName={result.picName}
+                      distance={result.distance}
+                      mapper={mapper}
+                      onPlay={() => {}}
+                      isLoading={loading}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {isPredictAudio && !isPredictImage && (
+              <ul>
+                {audioPredictionResult.map((result, index) => (
+                  <li key={index}>
+                    <SongCard
+                      audioName={result.audioName}
+                      similarity={result.similarity}
+                      mapper={mapper}
+                      onPlay={() => {}}
+                      isLoading={loading}
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
           </ul>
         </div>
@@ -139,6 +278,28 @@ export default function Home() {
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
         <AudioPlayer file={selectedFile} />
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
+        <input type="file" onChange={handleImageUpload} />
+        <button
+          className="px-4 py-2 bg-green-500 text-white mt-2"
+          onClick={handleImagePredict}
+        >
+          Predict Image
+        </button>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-xl font-bold mb-4">Upload and Predict Audio</h2>
+        <input type="file" onChange={handleAudioUpload} />
+        <button
+          className="px-4 py-2 bg-green-500 text-white mt-2"
+          onClick={handleAudioPredict}
+        >
+          Predict Audio
+        </button>
       </div>
     </div>
   );

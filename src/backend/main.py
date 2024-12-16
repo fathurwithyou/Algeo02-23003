@@ -26,7 +26,7 @@ CORS(app)
 def get_images():
     """Endpoint to retrieve all image file names from the public/images directory."""
     try:
-        directory = "public/images/"
+        directory = "data/image/"
         if not os.path.exists(directory):
             return jsonify({"error": "Images directory does not exist."}), 404
 
@@ -41,7 +41,7 @@ def get_images():
 def get_songs():
     """Endpoint to retrieve all audio file names from the public/songs directory."""
     try:
-        directory = "public/songs/"
+        directory = "data/audio/"
         if not os.path.exists(directory):
             return jsonify({"error": "Songs directory does not exist."}), 404
 
@@ -246,7 +246,7 @@ def predict_image():
     try:
         if 'image' not in request.files:
             return jsonify({"error": "No image file provided."}), 400
-
+        
         image_file = request.files['image']
         
         if image_model.is_fit() == False:

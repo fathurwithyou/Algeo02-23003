@@ -13,6 +13,7 @@ class AudioModel:
         self.audio_db = None
         self.model = AudioRetriever()
         os.makedirs(self.audio_folder, exist_ok=True)
+        os.makedirs(self.audio_query, exist_ok=True)
     
     def fit(self, audio_folder):
         self.model.fit(audio_folder)

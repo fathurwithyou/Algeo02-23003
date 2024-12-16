@@ -8,6 +8,8 @@ type SongCardProps = {
   mapper?: Record<string, string>;
   onPlay: () => void;
   isLoading: boolean;
+  similarity?: number;
+  distance?: number;
 };
 
 const SongCard: React.FC<SongCardProps> = ({
@@ -16,6 +18,8 @@ const SongCard: React.FC<SongCardProps> = ({
   mapper,
   onPlay,
   isLoading,
+  similarity,
+  distance,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -49,6 +53,14 @@ const SongCard: React.FC<SongCardProps> = ({
         </div>
       )}
       <span className="text-lg font-medium">{audioName || songName}</span>
+      {(similarity !== undefined || distance !== undefined) && (
+        <div className="text-sm text-gray-500">
+          {similarity !== undefined && (
+            <p>Similarity: {similarity.toFixed(2)}</p>
+          )}
+          {distance !== undefined && <p>Distance: {distance.toFixed(2)}</p>}
+        </div>
+      )}
     </div>
   );
 };
