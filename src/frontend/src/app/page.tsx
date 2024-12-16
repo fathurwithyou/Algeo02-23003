@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
 
@@ -137,6 +137,7 @@ export default function Home() {
       setImagePredictionResult(mappedResults);
       setIsPredictImage(true);
       setIsPredictAudio(false);
+      fetchMapper();
     } catch (error) {
       console.error("Error predicting image:", error);
     }
@@ -166,6 +167,7 @@ export default function Home() {
       setAudioPredictionResult(mappedResults);
       setIsPredictAudio(true);
       setIsPredictImage(false);
+      fetchMapper();
     } catch (error) {
       console.error("Error predicting audio:", error);
     }
@@ -205,6 +207,28 @@ export default function Home() {
           >
             Reset Predictions
           </button>
+
+          <div className="mt-4">
+            <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
+            <input type="file" onChange={handleImageUpload} accept="image/*" />
+            <button
+              className="px-4 py-2 bg-green-500 text-white mt-2"
+              onClick={handleImagePredict}
+            >
+              Predict Image
+            </button>
+          </div>
+
+          <div className="mt-4">
+            <h2 className="text-xl font-bold mb-4">Upload and Predict Audio</h2>
+            <input type="file" onChange={handleAudioUpload} accept="audio/*" />
+            <button
+              className="px-4 py-2 bg-green-500 text-white mt-2"
+              onClick={handleAudioPredict}
+            >
+              Predict Audio
+            </button>
+          </div>
           <ul>
             {!isPredictImage && !isPredictAudio && (
               <>
@@ -257,49 +281,29 @@ export default function Home() {
           </ul>
         </div>
 
-        <div className="flex justify-center mt-4">
-          {totalPages > 1 &&
-            Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                className={`px-4 py-2 mx-1 ${
-                  currentPage === index + 1
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                }`}
-                onClick={() => handlePageChange(index + 1)}
-                disabled={loading} // Disable page navigation while loading
-              >
-                {index + 1}
-              </button>
-            ))}
-        </div>
+        {!isPredictAudio && !isPredictImage && (
+          <div className="flex justify-center mt-4">
+            {totalPages > 1 &&
+              Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index}
+                  className={`px-4 py-2 mx-1 ${
+                    currentPage === index + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200"
+                  }`}
+                  onClick={() => handlePageChange(index + 1)}
+                  disabled={loading} // Disable page navigation while loading
+                >
+                  {index + 1}
+                </button>
+              ))}
+          </div>
+        )}
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
         <AudioPlayer file={selectedFile} />
-      </div>
-
-      <div className="mt-4">
-        <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
-        <input type="file" onChange={handleImageUpload} />
-        <button
-          className="px-4 py-2 bg-green-500 text-white mt-2"
-          onClick={handleImagePredict}
-        >
-          Predict Image
-        </button>
-      </div>
-
-      <div className="mt-4">
-        <h2 className="text-xl font-bold mb-4">Upload and Predict Audio</h2>
-        <input type="file" onChange={handleAudioUpload} />
-        <button
-          className="px-4 py-2 bg-green-500 text-white mt-2"
-          onClick={handleAudioPredict}
-        >
-          Predict Audio
-        </button>
       </div>
     </div>
   );

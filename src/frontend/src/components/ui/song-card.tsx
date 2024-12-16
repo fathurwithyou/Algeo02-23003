@@ -56,7 +56,7 @@ const SongCard: React.FC<SongCardProps> = ({
       {(similarity !== undefined || distance !== undefined) && (
         <div className="text-sm text-gray-500">
           {similarity !== undefined && (
-            <p>Similarity: {similarity.toFixed(2)}</p>
+            <p>Similarity: {(similarity * 100).toFixed(2)}%</p>
           )}
           {distance !== undefined && <p>Distance: {distance.toFixed(2)}</p>}
         </div>
