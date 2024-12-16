@@ -77,13 +77,13 @@ def upload_mapper():
             return jsonify({"error": "Invalid JSON format"}), 400
 
         for item in json_data:
-            mapper[item["audio_file"]] = item["pic_name"]
-            mapper[item["pic_name"]] = item["audio_file"]
+            mapper[item["audio_file"]] = item.get("pic_name", "Unknown")
+            mapper[item["pic_name"]] = item.get("audio_file", "Unknown")
             attributes[item["audio_file"]] = {
-                "artist": item["artist"],
-                "title": item["title"],
-                "album": item["album"],
-                "year": item["year"]
+                "artist": item.get("artist", "Unknown Artist"),
+                "title": item.get("title", "Unknown Title"),
+                "album": item.get("album", "Unknown Album"),
+                "year": item.get("year", "Unknown Year"),
             }
         
         return jsonify({"message": "Mapper uploaded successfully."}), 200
@@ -167,6 +167,9 @@ def predict_audio():
             return jsonify({"error": "No audio file provided."}), 400
 
         audio_file = request.files['audio']
+        print("======")
+        print(audio_file)
+        print("======")
         
         if audio_model.is_fit() == False:
             return jsonify({"error": "Model is not trained yet."}), 400

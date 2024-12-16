@@ -49,6 +49,10 @@ class AudioRetriever(AudioProcessor):
             # convert m4a to midi
             midi_file = audio_file.replace('.m4a', '.mid')
             self.m4atomidi(audio_file, midi_file)
+        elif audio_file.endswith('.opus'):
+            # convert opus to midi
+            midi_file = audio_file.replace('.opus', '.mid')
+            self.mp3tomidi(audio_file, midi_file)
         elif audio_file.endswith(('.mid', '.midi')):
             midi_file = audio_file
         else:

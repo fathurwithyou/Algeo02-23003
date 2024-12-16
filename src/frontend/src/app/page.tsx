@@ -13,6 +13,7 @@ const RECORD_TIME = 5;
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [mapper, setMapper] = useState<Record<string, string>>({});
+  const [atribute, setAtribute] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -49,16 +50,21 @@ export default function Home() {
           throw new Error("Failed to fetch mapper");
         }
         const mapperData = await response.json();
-        setMapper(mapperData);
+        setMapper(mapperData[0]);
+        setAtribute(mapperData[1]);
       } catch (error) {
         console.error("Error fetching mapper:", error);
       }
     };
 
-    console.log(predictionsResult?.results);
     fetchMapper();
     setIsReloading(false);
     fetchAudioFiles();
+    console.log(predictionsResult?.results);
+    setTotalPages(
+      Math.ceil(predictionsResult?.results.length / ITEMS_PER_PAGE)
+    );
+    console.log(totalPages);
   }, [isReloading, setIsReloading, predictionsResult]);
 
   const handlePageChange = (page: number) => {
@@ -76,7 +82,9 @@ export default function Home() {
     startIndex + ITEMS_PER_PAGE
   );
 
-  const currentPredictionResults = predictionsResult?.results || [];
+  const currentPredictionResults =
+    predictionsResult?.results.slice(startIndex, startIndex + ITEMS_PER_PAGE) ||
+    [];
 
   const recordComplete = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
