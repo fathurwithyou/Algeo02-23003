@@ -2,7 +2,6 @@
   "DATA_DIR": "./data",
   "LOG_DIR": "./logs",
   "RESULTS_DIR": "./results",
-  "SEED": 42,
 
   "AUDIO_CONFIG": {
     "frame_size": 1024,
@@ -16,18 +15,23 @@
   "IMAGE_CONFIG": {
     "resize_shape": [64, 64],
     "color_space": "RGB",
-    "supported_formats": [".jpg", ".png"],
+    "supported_formats": [".jpg", ".png", ".jpeg"],
     "database_folder": "./data/image",
     "query_folder": "./data/image_query"
   },
 
   "FEATURE_EXTRACTION": {
-    "audio_features": ["atb", "rtb", "ftb"],
+    "audio_features": ["atb", "rtb", "ftb", "histogram"],
     "image_features": ["color_histogram"]
   },
 
   "SIMILARITY_CONFIG": {
     "metric": "cosine",
+    "top_k": 5
+  },
+
+  "DISTANCE_CONFIG": {
+    "metric": "euclidean",
     "top_k": 5
   }
 }
