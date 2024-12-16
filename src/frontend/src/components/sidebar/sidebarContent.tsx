@@ -16,25 +16,22 @@ export const SaluSidebarContent = () => {
     <div>
       <div className="flex justify-around mb-4 rounded-md">
         <button
-          className={`px-4 py-2 ${
-            selectedForm === "image" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`}
+          className={`px-4 py-2 ${selectedForm === "image" ? "bg-blue-500 text-white" : "bg-secondary"
+            }`}
           onClick={() => setSelectedForm("image")}
         >
           Image Form
         </button>
         <button
-          className={`px-4 py-2 ${
-            selectedForm === "song" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`}
+          className={`px-4 py-2 ${selectedForm === "song" ? "bg-blue-500 text-white" : "bg-secondary"
+            }`}
           onClick={() => setSelectedForm("song")}
         >
           Song Form
         </button>
         <button
-          className={`px-4 py-2 ${
-            selectedForm === "mapper" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`}
+          className={`px-4 py-2 ${selectedForm === "mapper" ? "bg-blue-500 text-white" : "bg-secondary"
+            }`}
           onClick={() => setSelectedForm("mapper")}
         >
           Mapper Form
