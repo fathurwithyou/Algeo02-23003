@@ -9,6 +9,7 @@ import shutil
 import patoolib
 
 mapper = {}
+attributes = {}
 
 try:
     with open('settings.json', 'r') as f:
@@ -56,7 +57,7 @@ def get_songs():
 def get_mapper():
     """Endpoint to retrieve the mapper."""
     print("Mapper content:", mapper)
-    return jsonify(mapper)
+    return jsonify(mapper, attributes), 200
 
 @app.route('/upload/mapper', methods=['POST'])
 def upload_mapper():
@@ -78,8 +79,12 @@ def upload_mapper():
         for item in json_data:
             mapper[item["audio_file"]] = item["pic_name"]
             mapper[item["pic_name"]] = item["audio_file"]
-        
-        print("Mapper content:", mapper)
+            attributes[item["audio_file"]] = {
+                "artist": item["artist"],
+                "title": item["title"],
+                "album": item["album"],
+                "year": item["year"]
+            }
         
         return jsonify({"message": "Mapper uploaded successfully."}), 200
     
@@ -91,8 +96,9 @@ def upload_mapper():
 @app.route('/reset', methods=['GET'])
 def reset():
     """Reset the API."""
-    global mapper, audio_model, image_model
+    global mapper, audio_model, image_model, attributes
     mapper = {}
+    attributes = {}
     audio_model = AudioModel(settings["AUDIO_CONFIG"])
     image_model = ImageModel(settings["IMAGE_CONFIG"])
 
@@ -255,7 +261,6 @@ def upload_audio():
                     shutil.move(file_path, new_file_path)
                 shutil.rmtree(folder_path)
         
-        audio_model.fit(backend_audio_folder)
         audio_model = AudioModel(settings["AUDIO_CONFIG"])
         audio_model.fit(settings["AUDIO_CONFIG"]["database_folder"])
         return jsonify({"message": "Files uploaded successfully"}), 201
@@ -367,6 +372,7 @@ def upload_image():
                     shutil.move(file_path, new_file_path)
                 shutil.rmtree(folder_path)
         
+        image_model = ImageModel(settings["IMAGE_CONFIG"])
         image_model.fit(backend_image_folder)
         return jsonify({"message": "Files uploaded successfully"}), 201
 
