@@ -1,0 +1,3 @@
+audio_1.mid Billie Jean pic_1.png
+audio_2.mid DJ Remix pic_2.png
+audio_3.mid Gangsta Rap pic_3.png

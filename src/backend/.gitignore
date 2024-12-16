@@ -5,6 +5,8 @@ logs
 results
 __pycache__
 image/__pycache__
+models/__pycache__
+
 train.*
 
 /public
