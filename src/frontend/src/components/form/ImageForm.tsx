@@ -3,17 +3,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useImagePreviewStore } from "@/store/useImagePreviewStore";
+import {
+  UploadIcon,
+  LoaderIcon,
+  CheckIcon,
+  XIcon,
+  ImageIcon,
+} from "lucide-react"; // Import icons from lucide-react
+import { useSetIsReloading } from "@/store/useReloadStore";
 
 export const formSchema = z.object({
   images: z
@@ -32,7 +38,12 @@ export const formSchema = z.object({
 });
 
 export function ImageForm() {
-  const { setImage } = useImagePreviewStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [isHovered, setIsHovered] = useState(false);
+  const setIsReloading = useSetIsReloading();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +52,15 @@ export function ImageForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (values.images.length === 0) {
+      console.error("No files selected");
+      return;
+    }
+
+    setIsLoading(true);
+    setUploadStatus("idle");
+    console.log("hello");
+
     try {
       const formData = new FormData();
       values.images.forEach((file) => {
@@ -55,45 +75,78 @@ export function ImageForm() {
       if (response.ok) {
         console.log("Files uploaded successfully");
         form.reset({ images: [] });
-        setImage(null);
+        setUploadStatus("success");
+        setTimeout(() => setUploadStatus("idle"), 2000);
+        setIsHovered(false);
+        setIsReloading(true);
       } else {
         console.error("File upload failed");
+        setUploadStatus("error");
       }
     } catch (error) {
       console.error("Error uploading files:", error);
+      setUploadStatus("error");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form className="space-y-8">
         <FormField
           control={form.control}
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload Images</FormLabel>
               <FormControl>
-                <Input
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    field.onChange(files);
-                    const firstImageFile = files.find((file) =>
-                      file.type.startsWith("image/")
-                    );
-                    setImage(firstImageFile ?? null);
-                  }}
-                  id="images"
-                  type="file"
-                  accept="image/*,.zip"
-                  multiple
-                />
+                <div className="relative">
+                  <Input
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      console.log("Selected files:", files);
+                      field.onChange(files);
+                      if (files.length > 0) {
+                        form.handleSubmit(onSubmit)();
+                      }
+                    }}
+                    id="images"
+                    type="file"
+                    accept=".jpg,.png,.jpeg,.zip"
+                    multiple
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("images")?.click()}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className={`flex items-center justify-center w-10 h-10 bg-secondary rounded-md transition-transform transform duration-300 ease-in-out ${
+                      isLoading || uploadStatus !== "idle"
+                        ? "scale-90"
+                        : isHovered
+                        ? "scale-110"
+                        : "scale-100"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <LoaderIcon className="w-6 h-6 animate-spin" />
+                    ) : uploadStatus === "success" ? (
+                      <CheckIcon className="w-6 h-6" />
+                    ) : uploadStatus === "error" ? (
+                      <XIcon className="w-6 h-6" />
+                    ) : isHovered ? (
+                      <UploadIcon className="w-6 h-6" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
       </form>
     </Form>
   );

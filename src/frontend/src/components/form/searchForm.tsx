@@ -12,48 +12,38 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  UploadIcon,
-  LoaderIcon,
-  CheckIcon,
-  XIcon,
-  MusicIcon,
-} from "lucide-react"; // Import icons from lucide-react
-import { useSetIsReloading } from "@/store/useReloadStore";
+import { LoaderIcon, CheckIcon, XIcon, SearchIcon } from "lucide-react"; // Import icons from lucide-react
 
 export const formSchema = z.object({
-  songs: z
+  predictions: z
     .array(z.instanceof(File))
     .refine(
       (files) =>
         files.every(
           (file) =>
-            file?.type.startsWith("audio/") ||
-            file?.name.toLowerCase().endsWith(".zip")
+            file?.type.startsWith("image/") || file?.type.startsWith("audio/")
         ),
       {
-        message: "Please upload valid audio or zip files.",
+        message: "Please upload valid image or audio files.",
       }
     ),
 });
 
-export function SongForm() {
+export function SearchForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
   const [isHovered, setIsHovered] = useState(false);
-  const setIsReloading = useSetIsReloading();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      songs: [],
+      predictions: [],
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.songs.length === 0) {
+    if (values.predictions.length === 0) {
       console.error("No files selected");
       return;
     }
@@ -63,22 +53,21 @@ export function SongForm() {
 
     try {
       const formData = new FormData();
-      values.songs.forEach((file) => {
-        formData.append("files", file);
+      values.predictions.forEach((file) => {
+        formData.append("file", file);
       });
 
-      const response = await fetch("/api/uploadAudio", {
+      const response = await fetch("/api/predict", {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         console.log("Files uploaded successfully");
-        form.reset({ songs: [] });
+        form.reset({ predictions: [] });
         setUploadStatus("success");
-        setTimeout(() => setUploadStatus("idle"), 1000);
+        setTimeout(() => setUploadStatus("idle"), 2000);
         setIsHovered(false);
-        setIsReloading(true);
       } else {
         console.error("File upload failed");
         setUploadStatus("error");
@@ -93,10 +82,10 @@ export function SongForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form className="space-y-8">
         <FormField
           control={form.control}
-          name="songs"
+          name="predictions"
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -104,20 +93,23 @@ export function SongForm() {
                   <Input
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
+                      console.log("Selected files:", files);
                       field.onChange(files);
                       if (files.length > 0) {
                         form.handleSubmit(onSubmit)();
                       }
                     }}
-                    id="songs"
+                    id="predictions"
                     type="file"
-                    accept="audio/*,.zip"
+                    accept="image/*,audio/*"
                     multiple
                     className="hidden"
                   />
                   <button
                     type="button"
-                    onClick={() => document.getElementById("songs")?.click()}
+                    onClick={() =>
+                      document.getElementById("predictions")?.click()
+                    }
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                     className={`flex items-center justify-center w-10 h-10 bg-secondary rounded-md transition-transform transform duration-300 ease-in-out ${
@@ -134,10 +126,8 @@ export function SongForm() {
                       <CheckIcon className="w-6 h-6" />
                     ) : uploadStatus === "error" ? (
                       <XIcon className="w-6 h-6" />
-                    ) : isHovered ? (
-                      <UploadIcon className="w-6 h-6" />
                     ) : (
-                      <MusicIcon className="w-6 h-6" />
+                      <SearchIcon className="w-6 h-6" />
                     )}
                   </button>
                 </div>

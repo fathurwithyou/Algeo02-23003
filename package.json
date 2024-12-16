@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "jszip": "^3.10.1",
-    "react-audio-voice-recorder": "^2.2.0"
-  }
-}

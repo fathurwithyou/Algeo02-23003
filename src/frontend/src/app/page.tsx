@@ -4,18 +4,17 @@ import React, { useState, useEffect, use } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
 import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
-
+import { useIsReloading, useSetIsReloading } from "@/store/useReloadStore";
 
 const ITEMS_PER_PAGE = 5;
 const RECORD_TIME = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [mapper, setMapper] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [useMapper, setUseMapper] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -31,6 +30,9 @@ export default function Home() {
   const recorderControls = useAudioRecorder();
 
   const [audioUrl, setAudioUrl] = useState<any>(null);
+
+  const isReloading = useIsReloading();
+  const setIsReloading = useSetIsReloading();
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -49,62 +51,27 @@ export default function Home() {
         setLoading(false);
       }
     };
-
-    const fetchImageFiles = async () => {
-      setLoading(true);
+    const fetchMapper = async () => {
       try {
-        const response = await fetch("http://localhost:5000/get/images");
+        const response = await fetch("http://localhost:5000/get/mapper");
         if (!response.ok) {
-          throw new Error("Failed to fetch image files");
+          throw new Error("Failed to fetch mapper");
         }
-        const data = await response.json();
-        setImageFiles(data.images);
+        const mapperData = await response.json();
+        setMapper(mapperData);
+        setUseMapper(true);
       } catch (error) {
-        console.error("Error fetching image files:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching mapper:", error);
       }
     };
 
+    fetchMapper();
+    setIsReloading(false);
     fetchAudioFiles();
-    fetchImageFiles();
-  }, []);
+  }, [isReloading, setIsReloading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const fetchMapper = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/get/mapper");
-      if (!response.ok) {
-        throw new Error("Failed to fetch mapper");
-      }
-      const mapperData = await response.json();
-      setMapper(mapperData);
-      setUseMapper(true);
-    } catch (error) {
-      console.error("Error fetching mapper:", error);
-    }
-  };
-
-  const resetMapper = () => {
-    setMapper({});
-    setUseMapper(false);
-  };
-
-  const handleFileSelect = async (fileName: string) => {
-    try {
-      const response = await fetch(`/api/audio-files?filename=${fileName}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch file");
-      }
-      const fileBlob = await response.blob();
-      const file = new File([fileBlob], fileName, { type: fileBlob.type });
-      setSelectedFile(file);
-    } catch (error) {
-      console.error("Error fetching file:", error);
-    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,9 +108,9 @@ export default function Home() {
         distance: item[1],
       }));
       setImagePredictionResult(mappedResults);
+      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictImage(true);
       setIsPredictAudio(false);
-      fetchMapper();
     } catch (error) {
       console.error("Error predicting image:", error);
     }
@@ -171,9 +138,9 @@ export default function Home() {
         similarity: item[1],
       }));
       setAudioPredictionResult(mappedResults);
+      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictAudio(true);
       setIsPredictImage(false);
-      fetchMapper();
     } catch (error) {
       console.error("Error predicting audio:", error);
     }
@@ -184,12 +151,24 @@ export default function Home() {
     setIsPredictAudio(false);
   };
 
+  const handlePlay = (audioName: string) => {
+    const audioPath = `/audio/${audioName}`;
+    setSelectedFile(audioPath);
+  };
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentAudioFiles = audioFiles.slice(
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
-
+  const currentImagePredictionResults = imagePredictionResult.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+  const currentAudioPredictionResults = audioPredictionResult.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   const recordComplete = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
@@ -199,8 +178,7 @@ export default function Home() {
     a.href = url;
     a.download = "audio.wav";
     a.click();
-
-  }
+  };
 
   useEffect(() => {
     if (recorderControls.recordingTime == RECORD_TIME + 1) {
@@ -212,60 +190,15 @@ export default function Home() {
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
         <div>
-          <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
-          <button
-            className="px-4 py-2 bg-blue-500 text-white mb-4"
-            onClick={fetchMapper}
-          >
-            Use Mapper
-          </button>
-          <button
-            className="px-4 py-2 bg-red-500 text-white mb-4"
-            onClick={resetMapper}
-          >
-            Reset Mapper
-          </button>
-          <button
-            className="px-4 py-2 bg-yellow-500 text-white mb-4"
-            onClick={resetPredictions}
-          >
-            Reset Predictions
-          </button>
-          {/* recorder */}
-
           <div style={{ display: "none" }}>
             <AudioRecorder
               onRecordingComplete={(blob) => recordComplete(blob)}
               recorderControls={recorderControls}
             />
           </div>
-          <button onClick={recorderControls.startRecording}>Start recording</button>
-
-
-
-
-
-          <div className="mt-4">
-            <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
-            <input type="file" onChange={handleImageUpload} accept="image/*" />
-            <button
-              className="px-4 py-2 bg-green-500 text-white mt-2"
-              onClick={handleImagePredict}
-            >
-              Predict Image
-            </button>
-          </div>
-
-          <div className="mt-4">
-            <h2 className="text-xl font-bold mb-4">Upload and Predict Audio</h2>
-            <input type="file" onChange={handleAudioUpload} accept="audio/*" />
-            <button
-              className="px-4 py-2 bg-green-500 text-white mt-2"
-              onClick={handleAudioPredict}
-            >
-              Predict Audio
-            </button>
-          </div>
+          <button onClick={recorderControls.startRecording}>
+            Start recording
+          </button>
           <ul>
             {!isPredictImage && !isPredictAudio && (
               <>
@@ -275,7 +208,7 @@ export default function Home() {
                       <SongCard
                         audioName={file}
                         picName={useMapper ? mapper[file] : undefined}
-                        onPlay={() => { }}
+                        onPlay={() => handlePlay(file)}
                         isLoading={loading}
                       />
                     </li>
@@ -287,13 +220,13 @@ export default function Home() {
             )}
             {isPredictImage && !isPredictAudio && (
               <ul>
-                {imagePredictionResult.map((result, index) => (
+                {currentImagePredictionResults.map((result, index) => (
                   <li key={index}>
                     <SongCard
                       picName={result.picName}
                       distance={result.distance}
                       mapper={mapper}
-                      onPlay={() => { }}
+                      onPlay={() => {}}
                       isLoading={loading}
                     />
                   </li>
@@ -302,13 +235,13 @@ export default function Home() {
             )}
             {isPredictAudio && !isPredictImage && (
               <ul>
-                {audioPredictionResult.map((result, index) => (
+                {currentAudioPredictionResults.map((result, index) => (
                   <li key={index}>
                     <SongCard
                       audioName={result.audioName}
                       similarity={result.similarity}
                       mapper={mapper}
-                      onPlay={() => { }}
+                      onPlay={() => handlePlay(result.audioName)}
                       isLoading={loading}
                     />
                   </li>
@@ -318,29 +251,28 @@ export default function Home() {
           </ul>
         </div>
 
-        {!isPredictAudio && !isPredictImage && (
-          <div className="flex justify-center mt-4">
-            {totalPages > 1 &&
-              Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index}
-                  className={`px-4 py-2 mx-1 ${currentPage === index + 1
+        <div className="flex justify-center mt-4">
+          {totalPages > 1 &&
+            Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index}
+                className={`px-4 py-2 mx-1 ${
+                  currentPage === index + 1
                     ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                    }`}
-                  onClick={() => handlePageChange(index + 1)}
-                  disabled={loading} // Disable page navigation while loading
-                >
-                  {index + 1}
-                </button>
-              ))}
-          </div>
-        )}
+                    : "bg-secondary"
+                }`}
+                onClick={() => handlePageChange(index + 1)}
+                disabled={loading} // Disable page navigation while loading
+              >
+                {index + 1}
+              </button>
+            ))}
+        </div>
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
-        <AudioPlayer file={selectedFile} />
+        <AudioPlayer src={selectedFile} />
       </div>
-    </div >
+    </div>
   );
 }

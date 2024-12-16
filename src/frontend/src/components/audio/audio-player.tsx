@@ -7,8 +7,8 @@ import Progress from "../ui/progress";
 import { Card, CardContent } from "../ui/card";
 
 type AudioPlayerProps = {
-  file?: File | null; // Accepts a File object
-  src?: string | null; // Accepts a source URL as a string
+  file?: File | null;
+  src?: string | null;
 };
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
@@ -18,7 +18,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
   const [progress, setProgress] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
-  const [volume, setVolume] = useState<number>(1); // Volume state
+  const [volume, setVolume] = useState<number>(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isDragging = useRef<boolean>(false);
 
@@ -42,17 +42,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
       audioRef.current.pause();
     }
   }, [file, src]);
-
-  // useEffect(() => {
-  //   if (audioSrc && audioRef.current) {
-  //     setProgress(0);
-  //     setCurrentTime(0);
-  //     setIsPlaying(false);
-  //     audioRef.current.pause();
-  //     audioRef.current.play();
-  //     setIsPlaying(true);
-  //   }
-  // }, [audioSrc]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
