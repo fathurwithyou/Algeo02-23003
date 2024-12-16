@@ -59,6 +59,7 @@ export function ImageForm() {
 
     setIsLoading(true);
     setUploadStatus("idle");
+    console.log("hello");
 
     try {
       const formData = new FormData();
@@ -111,7 +112,7 @@ export function ImageForm() {
                     }}
                     id="images"
                     type="file"
-                    accept="image/*,.zip"
+                    accept=".jpg,.png,.jpeg,.zip"
                     multiple
                     className="hidden"
                   />

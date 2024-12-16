@@ -13,10 +13,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoaderIcon, CheckIcon, XIcon, SearchIcon } from "lucide-react"; // Import icons from lucide-react
-import { useSetIsReloading } from "@/store/useReloadStore";
 
 export const formSchema = z.object({
-  images: z
+  predictions: z
     .array(z.instanceof(File))
     .refine(
       (files) =>
@@ -25,7 +24,7 @@ export const formSchema = z.object({
             file?.type.startsWith("image/") || file?.type.startsWith("audio/")
         ),
       {
-        message: "Please upload valid image or zip files.",
+        message: "Please upload valid image or audio files.",
       }
     ),
 });
@@ -36,16 +35,15 @@ export function SearchForm() {
     "idle" | "success" | "error"
   >("idle");
   const [isHovered, setIsHovered] = useState(false);
-  const setIsReloading = useSetIsReloading();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      images: [],
+      predictions: [],
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (values.images.length === 0) {
+    if (values.predictions.length === 0) {
       console.error("No files selected");
       return;
     }
@@ -55,22 +53,21 @@ export function SearchForm() {
 
     try {
       const formData = new FormData();
-      values.images.forEach((file) => {
-        formData.append("files", file);
+      values.predictions.forEach((file) => {
+        formData.append("file", file);
       });
 
-      const response = await fetch("/api/uploadImage", {
+      const response = await fetch("/api/predict", {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         console.log("Files uploaded successfully");
-        form.reset({ images: [] });
+        form.reset({ predictions: [] });
         setUploadStatus("success");
         setTimeout(() => setUploadStatus("idle"), 2000);
         setIsHovered(false);
-        setIsReloading(true);
       } else {
         console.error("File upload failed");
         setUploadStatus("error");
@@ -88,7 +85,7 @@ export function SearchForm() {
       <form className="space-y-8">
         <FormField
           control={form.control}
-          name="images"
+          name="predictions"
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -102,15 +99,17 @@ export function SearchForm() {
                         form.handleSubmit(onSubmit)();
                       }
                     }}
-                    id="images"
+                    id="predictions"
                     type="file"
-                    accept="image/*,.zip"
+                    accept="image/*,audio/*"
                     multiple
                     className="hidden"
                   />
                   <button
                     type="button"
-                    onClick={() => document.getElementById("images")?.click()}
+                    onClick={() =>
+                      document.getElementById("predictions")?.click()
+                    }
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                     className={`flex items-center justify-center w-10 h-10 bg-secondary rounded-md transition-transform transform duration-300 ease-in-out ${

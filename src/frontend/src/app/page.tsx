@@ -199,28 +199,6 @@ export default function Home() {
           <button onClick={recorderControls.startRecording}>
             Start recording
           </button>
-
-          <div className="mt-4">
-            <h2 className="text-xl font-bold mb-4">Upload and Predict Image</h2>
-            <input type="file" onChange={handleImageUpload} accept="image/*" />
-            <button
-              className="px-4 py-2 bg-green-500 text-white mt-2"
-              onClick={handleImagePredict}
-            >
-              Predict Image
-            </button>
-          </div>
-
-          <div className="mt-4">
-            <h2 className="text-xl font-bold mb-4">Upload and Predict Audio</h2>
-            <input type="file" onChange={handleAudioUpload} accept="audio/*" />
-            <button
-              className="px-4 py-2 bg-green-500 text-white mt-2"
-              onClick={handleAudioPredict}
-            >
-              Predict Audio
-            </button>
-          </div>
           <ul>
             {!isPredictImage && !isPredictAudio && (
               <>
