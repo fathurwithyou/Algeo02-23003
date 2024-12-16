@@ -13,7 +13,9 @@ class AudioModel:
         self.audio_db = None
         self.model = AudioRetriever()
         os.makedirs(self.audio_folder, exist_ok=True)
-        self.model.fit(self.audio_folder)
+    
+    def fit(self, audio_folder):
+        self.model.fit(audio_folder)
 
     def predict(self, audio_file):
         if not audio_file.filename.lower().endswith((".wav", ".midi", ".mid")):
@@ -25,7 +27,6 @@ class AudioModel:
         results = self.model.predict(query_path)
         os.remove(query_path)
         
-        print({"results": results})
         return {"results": results}
 
     def upload(self, zip_file):
@@ -49,13 +50,14 @@ class AudioModel:
         Returns:
             List of tuples containing (audio_file, image_file)
         """
-        # get image files and audio files
         result = []
         for file in files:
             result.append((mapper.get(file, None), file))
         
         return result
 
+    def is_fit(self):
+        return self.model.is_fit()
         
         
         

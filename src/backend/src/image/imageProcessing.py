@@ -1,9 +1,12 @@
 import os
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 from numpy.linalg import svd
+import json
 
+with open("settings.json", "r") as file:
+    settings = json.load(file)
+    
 class ImageProcessor:
     def __init__(self, resize_shape=(64, 64)):
         self.resize_shape = resize_shape
@@ -16,7 +19,7 @@ class ImageProcessor:
         image_paths = [
             os.path.join(image_dir, fname)
             for fname in os.listdir(image_dir)
-            if fname.lower().endswith((".jpg", ".png", ".jpeg"))
+            if fname.lower().endswith(settings["IMAGE_CONFIG"]["supported_formats"])
         ]
         if not image_paths:
             raise ValueError("No images found in the directory.")
@@ -63,6 +66,11 @@ class PCAProcessor:
         """Transform images to PCA space."""
         centered_images = images - self.mean_image
         return np.dot(centered_images, self.components.T)
+    
+    def fit_transform(self, images):
+        """Fit PCA and transform the images."""
+        self.fit(images)
+        return self.transform(images)
 
     def project(self, image):
         """Project a single image into PCA space."""

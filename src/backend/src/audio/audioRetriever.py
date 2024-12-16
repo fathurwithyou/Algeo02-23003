@@ -1,5 +1,10 @@
 from src.audio.audioProcessing import AudioProcessor
 import numpy as np
+import os
+import json
+
+with open("settings.json", "r") as f:
+    settings = json.load(f)
 
 class AudioRetriever(AudioProcessor):
     def __init__(self):
@@ -36,6 +41,10 @@ class AudioRetriever(AudioProcessor):
             # Convert WAV to MIDI
             midi_file = audio_file.replace('.wav', '.mid')
             self.wav2midi(audio_file, midi_file)
+        elif audio_file.endswith('.mp3'):
+            # convert mp3 to midi
+            midi_file = audio_file.replace('.mp3', '.mid')
+            self.mp3tomidi(audio_file, midi_file)
         elif audio_file.endswith(('.mid', '.midi')):
             midi_file = audio_file
         else:
@@ -64,9 +73,11 @@ class AudioRetriever(AudioProcessor):
             
             similarities[midi_file] = self.similarity(hist1, hist2)
         
-        # Filter the results and sort by similarity
         result = [(k, v) for k, v in similarities.items() if v >= threshold]
         result.sort(key=lambda x: x[1], reverse=True)
+        
+        result = [(os.path.basename(k), v) for k, v in result]
+        
         return result
     
     def is_fit(self):
