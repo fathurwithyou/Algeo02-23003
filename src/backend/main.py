@@ -349,6 +349,7 @@ def upload_image():
                 file_path_frontend = os.path.join(frontend_image_folder, filename)
                 print(file)
                 file.save(file_path_backend)
+                file.stream.seek(0)  # Reset file stream position to the beginning
                 file.save(file_path_frontend)
         
         for folder in os.listdir(backend_image_folder):
