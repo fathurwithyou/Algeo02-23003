@@ -4,16 +4,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  UploadIcon,
+  LoaderIcon,
+  CheckIcon,
+  XIcon,
+  ClipboardIcon,
+} from "lucide-react"; // Import icons from lucide-react
+import { useSetIsReloading } from "@/store/useReloadStore";
 
 // Validation schema
 export const formSchema = z.object({
@@ -30,7 +36,12 @@ export const formSchema = z.object({
 });
 
 export function MapperForm() {
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [isHovered, setIsHovered] = useState(false);
+  const setIsReloading = useSetIsReloading();
 
   // Define the form using react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,6 +53,14 @@ export function MapperForm() {
 
   // Submit handler
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!values.mapper) {
+      console.error("No file selected");
+      return;
+    }
+
+    setIsLoading(true);
+    setUploadStatus("idle");
+
     try {
       const formData = new FormData();
       formData.append("file", values.mapper);
@@ -54,15 +73,19 @@ export function MapperForm() {
       if (response.ok) {
         console.log("File uploaded successfully");
         form.reset({ mapper: undefined });
-        setUploadSuccess(true);
-        setTimeout(() => {
-          setUploadSuccess(false);
-        }, 3000);
+        setUploadStatus("success");
+        setTimeout(() => setUploadStatus("idle"), 2000);
+        setIsHovered(false);
+        setIsReloading(true);
       } else {
         console.error("File upload failed");
+        setUploadStatus("error");
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      setUploadStatus("error");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -74,26 +97,52 @@ export function MapperForm() {
           name="mapper"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload Mapper</FormLabel>
               <FormControl>
-                <Input
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    field.onChange(file);
-                  }}
-                  id="mapper"
-                  type="file"
-                  accept=".txt,.json"
-                />
+                <div className="relative">
+                  <Input
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      field.onChange(file);
+                      if (file) {
+                        form.handleSubmit(onSubmit)();
+                      }
+                    }}
+                    id="mapper"
+                    type="file"
+                    accept=".txt,.json"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("mapper")?.click()}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className={`flex items-center justify-center w-10 h-10 bg-secondary rounded-md transition-transform transform duration-300 ease-in-out ${
+                      isLoading || uploadStatus !== "idle"
+                        ? "scale-90"
+                        : isHovered
+                        ? "scale-110"
+                        : "scale-100"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <LoaderIcon className="w-6 h-6 animate-spin" />
+                    ) : uploadStatus === "success" ? (
+                      <CheckIcon className="w-6 h-6" />
+                    ) : uploadStatus === "error" ? (
+                      <XIcon className="w-6 h-6" />
+                    ) : isHovered ? (
+                      <UploadIcon className="w-6 h-6" />
+                    ) : (
+                      <ClipboardIcon className="w-6 h-6" />
+                    )}
+                  </button>
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {uploadSuccess && (
-          <div className="text-green-500">File uploaded successfully!</div>
-        )}
-        <Button type="submit">Submit</Button>
       </form>
     </Form>
   );

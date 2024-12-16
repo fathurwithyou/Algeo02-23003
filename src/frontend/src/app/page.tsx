@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
 import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
+import { useIsReloading, useSetIsReloading } from "@/store/useReloadStore";
 
 const ITEMS_PER_PAGE = 5;
 const RECORD_TIME = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [mapper, setMapper] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,6 +31,9 @@ export default function Home() {
 
   const [audioUrl, setAudioUrl] = useState<any>(null);
 
+  const isReloading = useIsReloading();
+  const setIsReloading = useSetIsReloading();
+
   useEffect(() => {
     const fetchAudioFiles = async () => {
       setLoading(true);
@@ -48,48 +51,27 @@ export default function Home() {
         setLoading(false);
       }
     };
-
-    const fetchImageFiles = async () => {
-      setLoading(true);
+    const fetchMapper = async () => {
       try {
-        const response = await fetch("http://localhost:5000/get/images");
+        const response = await fetch("http://localhost:5000/get/mapper");
         if (!response.ok) {
-          throw new Error("Failed to fetch image files");
+          throw new Error("Failed to fetch mapper");
         }
-        const data = await response.json();
-        setImageFiles(data.images);
+        const mapperData = await response.json();
+        setMapper(mapperData);
+        setUseMapper(true);
       } catch (error) {
-        console.error("Error fetching image files:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching mapper:", error);
       }
     };
 
+    fetchMapper();
+    setIsReloading(false);
     fetchAudioFiles();
-    fetchImageFiles();
-  }, []);
+  }, [isReloading, setIsReloading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const fetchMapper = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/get/mapper");
-      if (!response.ok) {
-        throw new Error("Failed to fetch mapper");
-      }
-      const mapperData = await response.json();
-      setMapper(mapperData);
-      setUseMapper(true);
-    } catch (error) {
-      console.error("Error fetching mapper:", error);
-    }
-  };
-
-  const resetMapper = () => {
-    setMapper({});
-    setUseMapper(false);
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +111,6 @@ export default function Home() {
       setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictImage(true);
       setIsPredictAudio(false);
-      fetchMapper();
     } catch (error) {
       console.error("Error predicting image:", error);
     }
@@ -160,7 +141,6 @@ export default function Home() {
       setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictAudio(true);
       setIsPredictImage(false);
-      fetchMapper();
     } catch (error) {
       console.error("Error predicting audio:", error);
     }
@@ -206,37 +186,10 @@ export default function Home() {
     }
   }, [recorderControls.recordingTime]);
 
-  useEffect(() => {
-    if (recorderControls.recordingTime == RECORD_TIME + 1) {
-      recorderControls.stopRecording();
-    }
-  }, [recorderControls.recordingTime]);
-
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
         <div>
-          <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
-          <button
-            className="px-4 py-2 bg-blue-500 text-white mb-4"
-            onClick={fetchMapper}
-          >
-            Use Mapper
-          </button>
-          <button
-            className="px-4 py-2 bg-red-500 text-white mb-4"
-            onClick={resetMapper}
-          >
-            Reset Mapper
-          </button>
-          <button
-            className="px-4 py-2 bg-yellow-500 text-white mb-4"
-            onClick={resetPredictions}
-          >
-            Reset Predictions
-          </button>
-          {/* recorder */}
-
           <div style={{ display: "none" }}>
             <AudioRecorder
               onRecordingComplete={(blob) => recordComplete(blob)}
