@@ -42,6 +42,11 @@ Kemudian instal dependensi:
 pip install -r ./requirements.txt
 ```
 
+Kemudian jalankan
+```bash
+python ./main.py
+```
+
 #### Langkah 2: Menjalankan _Frontend_
 Pada **Terminal 2**:
 ```bash
