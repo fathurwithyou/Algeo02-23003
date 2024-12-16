@@ -16,6 +16,9 @@ try:
 except FileNotFoundError:
     raise FileNotFoundError("settings.json file is missing. Please provide a valid configuration file.")
 
+image_model = ImageModel(settings["IMAGE_CONFIG"])
+audio_model = AudioModel(settings["AUDIO_CONFIG"])
+
 app = Flask(__name__)
 CORS(app)
 
@@ -83,10 +86,6 @@ def upload_mapper():
     except Exception as e:
         print("Error:", e)  # Log the exception
         return jsonify({"error": str(e)}), 500
-
-
-image_model = ImageModel(settings["IMAGE_CONFIG"])
-audio_model = AudioModel(settings["AUDIO_CONFIG"])
 
 
 @app.route('/reset', methods=['GET'])
