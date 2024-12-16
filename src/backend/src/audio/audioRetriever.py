@@ -17,13 +17,28 @@ class AudioRetriever(AudioProcessor):
         Build a database of MIDI notes from a folder containing MIDI and WAV files.
         """
         import os
+        print("Building database...")
         for root, dirs, files in os.walk(folder_path):
             for file in files:
-                if file.endswith('.mid'):
+                if file.endswith(('.mid', '.midi')):
                     midi_file = os.path.join(root, file)
+                    print(midi_file)
+                    midi_notes = self.extract_midi_notes(midi_file)
+                    self.database[midi_file] = midi_notes
+                elif file.endswith('.mp3'):
+                    audio_file = os.path.join(root, file)
+                    midi_file = audio_file.replace('.mp3', '.mid')
+                    self.mp3tomidi(audio_file, midi_file)
+                    midi_notes = self.extract_midi_notes(midi_file)
+                    self.database[midi_file] = midi_notes
+                elif file.endswith('.m4a'):
+                    audio_file = os.path.join(root, file)
+                    midi_file = audio_file.replace('.m4a', '.mid')
+                    self.m4atomidi(audio_file, midi_file)
                     midi_notes = self.extract_midi_notes(midi_file)
                     self.database[midi_file] = midi_notes
                 elif file.endswith('.wav'):
+                    print("Processing file: ", file)
                     audio_file = os.path.join(root, file)
                     midi_file = audio_file.replace('.wav', '.mid')
                     self.wav2midi(audio_file, midi_file)
@@ -48,7 +63,11 @@ class AudioRetriever(AudioProcessor):
         elif audio_file.endswith('.m4a'):
             # convert m4a to midi
             midi_file = audio_file.replace('.m4a', '.mid')
-            self.m4atomidi(audio_file, midi_file)
+            self.m4atomidi(audio_file, midi_file)     
+        elif audio_file.endswith('.opus'):
+            # convert opus to midi
+            midi_file = audio_file.replace('.opus', '.mid')
+            self.opustomidi(audio_file, midi_file)
         elif audio_file.endswith(('.mid', '.midi')):
             midi_file = audio_file
         else:

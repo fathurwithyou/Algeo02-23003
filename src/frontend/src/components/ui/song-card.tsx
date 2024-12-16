@@ -7,6 +7,7 @@ type SongCardProps = {
   audioName?: string;
   picName?: string;
   mapper?: Record<string, string>;
+  atribute?: Record<string, string>;
   onPlay: () => void;
   isLoading: boolean;
   similarity?: number;
@@ -17,15 +18,35 @@ const SongCard: React.FC<SongCardProps> = ({
   audioName,
   picName,
   mapper,
+  atribute,
   onPlay,
   isLoading,
   similarity,
   distance,
 }) => {
-  const imageName = audioName && mapper?.[audioName] ? mapper[audioName] : null;
-  const songName = picName && mapper?.[picName] ? mapper[picName] : null;
+  let finalAudioName = audioName;
+  let finalPicName = picName;
+  let finalSimilarity = similarity;
+  let finalDistance = distance;
+
+  if (
+    audioName &&
+    (audioName.endsWith(".png") ||
+      audioName.endsWith(".jpg") ||
+      audioName.endsWith(".jpeg"))
+  ) {
+    finalPicName = audioName;
+    finalAudioName = undefined;
+    finalSimilarity = undefined;
+    finalDistance = distance;
+  }
+
+  const imageName =
+    finalAudioName && mapper?.[finalAudioName] ? mapper[finalAudioName] : null;
+  const songName =
+    finalPicName && mapper?.[finalPicName] ? mapper[finalPicName] : null;
   const imageSrc =
-    picName || imageName ? `/images/${picName || imageName}` : null;
+    finalPicName || imageName ? `/images/${finalPicName || imageName}` : null;
 
   return (
     <div className="flex justify-between items-center p-4 rounded-lg hover:bg-slate-300">
@@ -36,21 +57,23 @@ const SongCard: React.FC<SongCardProps> = ({
         {imageSrc ? (
           <Image
             src={imageSrc}
-            alt={picName || imageName || "Image"}
+            alt={finalPicName || imageName || "Image"}
             width={36}
             height={36}
           />
         ) : (
-          <p>Image Not Provided</p>
+          <p></p>
         )}
       </div>
-      <span className="text-lg font-medium">{audioName || songName}</span>
-      {(similarity !== undefined || distance !== undefined) && (
+      <span className="text-lg font-medium">{finalAudioName || songName}</span>
+      {(finalSimilarity !== undefined || finalDistance !== undefined) && (
         <div className="text-sm text-gray-500">
-          {similarity !== undefined && (
-            <p>Similarity: {(similarity * 100).toFixed(2)}%</p>
+          {finalSimilarity !== undefined && (
+            <p>Similarity: {(finalSimilarity * 100).toFixed(2)}%</p>
           )}
-          {distance !== undefined && <p>Distance: {distance.toFixed(2)}</p>}
+          {finalDistance !== undefined && (
+            <p>Distance: {finalDistance.toFixed(2)}</p>
+          )}
         </div>
       )}
     </div>
