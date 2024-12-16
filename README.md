@@ -50,6 +50,8 @@ npm install
 npm run dev
 ```
 
+Buka halaman http://localhost:3000 pada web atau pada port yang ditampilkan pada terminal frontend
+
 
 ## Fitur
 Proyek ini memiliki fitur-fitur berikut:
