@@ -114,43 +114,6 @@ def reset():
         
     return jsonify({"message": "API reset successful."}), 200
 
-    
-
-@app.route('/audio', methods=['POST'])
-def get_audio_by_filename():
-    """Endpoint to retrieve audio file by filename text."""
-    try:
-        if 'filename' not in request.form:
-            return jsonify({"error": "No filename provided."}), 400
-        
-        filepath = request.form['filename']
-        
-        if not os.path.exists(filepath):
-            return jsonify({"error": "File not found."}), 404
-        
-        return send_file(filepath, as_attachment=True)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-@app.route('/image', methods=['POST'])
-def get_image_by_filename():
-    """Endpoint to retrieve image file by filename."""
-    try:
-        if 'filename' not in request.form:
-            return jsonify({"error": "No filename provided."}), 400
-
-        filepath = request.form['filename']
-        
-        if not os.path.exists(filepath):
-            return jsonify({"error": "File not found."}), 404
-        
-        # Serve the image file
-        return send_file(filepath, as_attachment=True)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/predict/audio', methods=['POST'])
 def predict_audio():
     """Endpoint to predict similar audio."""
@@ -171,6 +134,7 @@ def predict_audio():
 
 @app.route('/upload/audio', methods=['POST'])
 def upload_audio():
+    global audio_model
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -230,6 +194,7 @@ def upload_audio():
                     shutil.move(file_path, new_file_path)
                 shutil.rmtree(folder_path)
         
+        audio_model = AudioModel(settings["AUDIO_CONFIG"])
         audio_model.fit(settings["AUDIO_CONFIG"]["database_folder"])
         return jsonify({"message": "Files uploaded successfully"}), 201
 
@@ -261,6 +226,7 @@ def predict_image():
 @app.route('/upload/image', methods=['POST'])
 def upload_image():
     """Endpoint for image upload."""
+    global image_model
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request."}), 400
@@ -319,7 +285,7 @@ def upload_image():
                     shutil.move(file_path, new_file_path)
                 shutil.rmtree(folder_path)
             
-        
+        image_model = ImageModel(settings["IMAGE_CONFIG"])
         image_model.fit(settings["IMAGE_CONFIG"]["database_folder"])
         return jsonify({"message": "Files uploaded successfully"}), 201
 
@@ -333,7 +299,4 @@ def health_check():
     return jsonify({"status": "API is running"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
