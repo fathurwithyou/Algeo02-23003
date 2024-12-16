@@ -116,38 +116,37 @@ def reset():
 
     
 
-@app.route('/audio', methods=['GET'])
+@app.route('/audio', methods=['POST'])
 def get_audio_by_filename():
-    """Endpoint to retrieve audio file by filename."""
+    """Endpoint to retrieve audio file by filename text."""
     try:
-        filename = request.args.get('filename')
-        if not filename:
+        if 'filename' not in request.form:
             return jsonify({"error": "No filename provided."}), 400
         
-        if not os.path.exists(filename):
+        filepath = request.form['filename']
+        
+        if not os.path.exists(filepath):
             return jsonify({"error": "File not found."}), 404
         
-        return send_file(filename, as_attachment=True)
+        return send_file(filepath, as_attachment=True)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/image', methods=['GET'])
+@app.route('/image', methods=['POST'])
 def get_image_by_filename():
-    """Endpoint to retrieve image file path by filename."""
+    """Endpoint to retrieve image file by filename."""
     try:
-        filename = request.args.get('filename')
-        if not filename:
+        if 'filename' not in request.form:
             return jsonify({"error": "No filename provided."}), 400
 
-        if not os.path.exists(filename):
+        filepath = request.form['filename']
+        
+        if not os.path.exists(filepath):
             return jsonify({"error": "File not found."}), 404
         
-        # Return the path for the image
-        return jsonify({"path": f"/static/images/{filename}"})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # Serve the image file
+        return send_file(filepath, as_attachment=True)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -172,6 +171,7 @@ def predict_audio():
 
 @app.route('/upload/audio', methods=['POST'])
 def upload_audio():
+    global audio_model
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part"}), 400
@@ -254,6 +254,8 @@ def upload_audio():
                 shutil.rmtree(folder_path)
         
         audio_model.fit(backend_audio_folder)
+        audio_model = AudioModel(settings["AUDIO_CONFIG"])
+        audio_model.fit(settings["AUDIO_CONFIG"]["database_folder"])
         return jsonify({"message": "Files uploaded successfully"}), 201
 
     except Exception as e:
@@ -280,6 +282,7 @@ def predict_image():
 @app.route('/upload/image', methods=['POST'])
 def upload_image():
     """Endpoint for image upload."""
+    global image_model
     try:
         if 'file' not in request.files:
             return jsonify({"error": "No file part in the request."}), 400
@@ -375,7 +378,4 @@ def health_check():
     return jsonify({"status": "API is running"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
