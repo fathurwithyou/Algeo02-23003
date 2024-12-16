@@ -91,8 +91,10 @@ def upload_mapper():
 @app.route('/reset', methods=['GET'])
 def reset():
     """Reset the API."""
-    global mapper
+    global mapper, audio_model, image_model
     mapper = {}
+    audio_model = AudioModel(settings["AUDIO_CONFIG"])
+    image_model = ImageModel(settings["IMAGE_CONFIG"])
 
     #  delete all files in the audio folder
     audio_files = os.listdir(settings["AUDIO_CONFIG"]["database_folder"])
