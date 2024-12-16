@@ -1,5 +1,6 @@
 "use client";
 
+import Swal from "sweetalert2";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -68,6 +69,11 @@ export function SearchForm() {
         console.error("Unsupported file type received:", file.type);
         setUploadStatus("error");
         setIsLoading(false);
+        Swal.fire({
+          icon: "error",
+          title: "Unsupported file type",
+          text: "Please upload a valid image or audio file.",
+        });
         return;
       }
 
@@ -87,10 +93,20 @@ export function SearchForm() {
       } else {
         console.error("File upload failed");
         setUploadStatus("error");
+        Swal.fire({
+          icon: "error",
+          title: "Upload failed",
+          text: "There was an error uploading the file. Please upload dataset before trying again.",
+        });
       }
     } catch (error) {
       console.error("Error uploading files:", error);
       setUploadStatus("error");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while uploading the file. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

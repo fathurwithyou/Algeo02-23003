@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
-import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
 import { useIsReloading, useSetIsReloading } from "@/store/useReloadStore";
 import { usePrediction } from "@/store/usePredictionStore";
 
 const ITEMS_PER_PAGE = 5;
-const RECORD_TIME = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
@@ -18,13 +16,10 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const recorderControls = useAudioRecorder();
-
-  const [audioUrl, setAudioUrl] = useState<any>(null);
 
   const isReloading = useIsReloading();
   const setIsReloading = useSetIsReloading();
-  const predictionsResult = usePrediction();
+  let predictionsResult = usePrediction();
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -60,12 +55,15 @@ export default function Home() {
     fetchMapper();
     setIsReloading(false);
     fetchAudioFiles();
+    predictionsResult = null;
+  }, [isReloading, setIsReloading]);
+
+  useEffect(() => {
     console.log(predictionsResult?.results);
     setTotalPages(
       Math.ceil(predictionsResult?.results.length / ITEMS_PER_PAGE)
     );
-    console.log(totalPages);
-  }, [isReloading, setIsReloading, predictionsResult]);
+  }, [predictionsResult]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -86,35 +84,10 @@ export default function Home() {
     predictionsResult?.results.slice(startIndex, startIndex + ITEMS_PER_PAGE) ||
     [];
 
-  const recordComplete = (blob: Blob) => {
-    const url = URL.createObjectURL(blob);
-    setAudioUrl(url); // Store the URL in state
-    // download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "audio.wav";
-    a.click();
-  };
-
-  useEffect(() => {
-    if (recorderControls.recordingTime == RECORD_TIME + 1) {
-      recorderControls.stopRecording();
-    }
-  }, [recorderControls.recordingTime]);
-
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
         <div>
-          <div style={{ display: "none" }}>
-            <AudioRecorder
-              onRecordingComplete={(blob) => recordComplete(blob)}
-              recorderControls={recorderControls}
-            />
-          </div>
-          <button onClick={recorderControls.startRecording}>
-            Start recording
-          </button>
           <ul>
             {!predictionsResult ? (
               <>
@@ -124,6 +97,7 @@ export default function Home() {
                       <SongCard
                         audioName={file}
                         mapper={mapper}
+                        atribute={atribute}
                         onPlay={() => handlePlay(file)}
                         isLoading={loading}
                       />
@@ -140,17 +114,25 @@ export default function Home() {
                     <li key={index}>
                       <SongCard
                         audioName={name}
-                        picName={name}
                         mapper={mapper}
-                        onPlay={() => handlePlay(name)}
-                        isLoading={loading}
+                        atribute={atribute}
+                        onPlay={() =>
+                          handlePlay(
+                            name.endsWith(".mp3") ||
+                              name.endsWith(".wav") ||
+                              name.endsWith(".m4a") ||
+                              name.endsWith(".mid")
+                              ? name
+                              : mapper[name]
+                          )
+                        }
                         similarity={value}
-                        distance={value}
+                        isLoading={loading}
                       />
                     </li>
                   ))
                 ) : (
-                  <p>No prediction results available.</p>
+                  <p>No audio files available.</p>
                 )}
               </>
             )}

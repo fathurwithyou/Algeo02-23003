@@ -29,6 +29,8 @@
     "react-audio-voice-recorder": "^2.2.0",
     "react-dom": "^18",
     "react-hook-form": "^7.53.2",
+    "react-midi-player": "^1.0.8",
+    "sweetalert2": "^11.15.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "unrar-js": "^0.2.3",

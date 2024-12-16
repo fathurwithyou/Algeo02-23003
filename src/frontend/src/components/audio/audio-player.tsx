@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { PlayIcon, PauseIcon, Volume2Icon } from "lucide-react";
 import Progress from "../ui/progress";
 import { Card, CardContent } from "../ui/card";
+// @ts-ignore
+import MidiPlayer from "react-midi-player";
 
 type AudioPlayerProps = {
   file?: File | null;
@@ -107,7 +109,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
       audioRef.current.volume = newVolume;
     }
   };
-
+  if (audioSrc && (audioSrc.endsWith(".mid") || audioSrc.endsWith(".midi"))) {
+    return (
+      <div className="max-w-md w-full space-y-4">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center gap-2">
+            <div className="text-center w-full">
+              <h2 className="text-xl font-bold break-words">
+                {fileName || "No Audio Selected"}
+              </h2>
+            </div>
+            <MidiPlayer src={audioSrc} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   return (
     <div className="max-w-md w-full space-y-4">
       <Card>
