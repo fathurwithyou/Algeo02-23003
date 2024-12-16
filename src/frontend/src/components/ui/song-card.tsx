@@ -26,7 +26,6 @@ const SongCard: React.FC<SongCardProps> = ({
   const songName = picName && mapper?.[picName] ? mapper[picName] : null;
   const imageSrc =
     picName || imageName ? `/images/${picName || imageName}` : null;
-  console.log("imageSrc", imageSrc);
 
   return (
     <div className="flex justify-between items-center p-4 rounded-lg hover:bg-slate-300">

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
 import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
 import { useIsReloading, useSetIsReloading } from "@/store/useReloadStore";
+import { usePrediction } from "@/store/usePredictionStore";
 
 const ITEMS_PER_PAGE = 5;
 const RECORD_TIME = 5;
@@ -16,23 +17,13 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [useMapper, setUseMapper] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [selectedAudio, setSelectedAudio] = useState<File | null>(null);
-  const [imagePredictionResult, setImagePredictionResult] = useState<
-    { picName: string; distance: number }[]
-  >([]);
-  const [audioPredictionResult, setAudioPredictionResult] = useState<
-    { audioName: string; similarity: number }[]
-  >([]);
-  const [isPredictImage, setIsPredictImage] = useState(false);
-  const [isPredictAudio, setIsPredictAudio] = useState(false);
   const recorderControls = useAudioRecorder();
 
   const [audioUrl, setAudioUrl] = useState<any>(null);
 
   const isReloading = useIsReloading();
   const setIsReloading = useSetIsReloading();
+  const predictionsResult = usePrediction();
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -59,96 +50,19 @@ export default function Home() {
         }
         const mapperData = await response.json();
         setMapper(mapperData);
-        setUseMapper(true);
       } catch (error) {
         console.error("Error fetching mapper:", error);
       }
     };
 
+    console.log(predictionsResult?.results);
     fetchMapper();
     setIsReloading(false);
     fetchAudioFiles();
-  }, [isReloading, setIsReloading]);
+  }, [isReloading, setIsReloading, predictionsResult]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedImage(event.target.files[0]);
-    }
-  };
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedAudio(event.target.files[0]);
-    }
-  };
-
-  const handleImagePredict = async () => {
-    if (!selectedImage) return;
-
-    const formData = new FormData();
-    formData.append("image", selectedImage);
-
-    try {
-      const response = await fetch("http://localhost:5000/predict/image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to predict image");
-      }
-
-      const result = await response.json();
-      const mappedResults = result.results.map((item: [string, number]) => ({
-        picName: item[0],
-        distance: item[1],
-      }));
-      setImagePredictionResult(mappedResults);
-      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
-      setIsPredictImage(true);
-      setIsPredictAudio(false);
-    } catch (error) {
-      console.error("Error predicting image:", error);
-    }
-  };
-
-  const handleAudioPredict = async () => {
-    if (!selectedAudio) return;
-
-    const formData = new FormData();
-    formData.append("audio", selectedAudio);
-
-    try {
-      const response = await fetch("http://localhost:5000/predict/audio", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to predict audio");
-      }
-
-      const result = await response.json();
-      const mappedResults = result.results.map((item: [string, number]) => ({
-        audioName: item[0],
-        similarity: item[1],
-      }));
-      setAudioPredictionResult(mappedResults);
-      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
-      setIsPredictAudio(true);
-      setIsPredictImage(false);
-    } catch (error) {
-      console.error("Error predicting audio:", error);
-    }
-  };
-
-  const resetPredictions = () => {
-    setIsPredictImage(false);
-    setIsPredictAudio(false);
   };
 
   const handlePlay = (audioName: string) => {
@@ -161,14 +75,8 @@ export default function Home() {
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
-  const currentImagePredictionResults = imagePredictionResult.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
-  const currentAudioPredictionResults = audioPredictionResult.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE
-  );
+
+  const currentPredictionResults = predictionsResult?.results || [];
 
   const recordComplete = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
@@ -200,14 +108,14 @@ export default function Home() {
             Start recording
           </button>
           <ul>
-            {!isPredictImage && !isPredictAudio && (
+            {!predictionsResult ? (
               <>
                 {currentAudioFiles.length > 0 ? (
                   currentAudioFiles.map((file, index) => (
                     <li key={index}>
                       <SongCard
                         audioName={file}
-                        picName={useMapper ? mapper[file] : undefined}
+                        mapper={mapper}
                         onPlay={() => handlePlay(file)}
                         isLoading={loading}
                       />
@@ -217,36 +125,26 @@ export default function Home() {
                   <p>No audio files available.</p>
                 )}
               </>
-            )}
-            {isPredictImage && !isPredictAudio && (
-              <ul>
-                {currentImagePredictionResults.map((result, index) => (
-                  <li key={index}>
-                    <SongCard
-                      picName={result.picName}
-                      distance={result.distance}
-                      mapper={mapper}
-                      onPlay={() => {}}
-                      isLoading={loading}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {isPredictAudio && !isPredictImage && (
-              <ul>
-                {currentAudioPredictionResults.map((result, index) => (
-                  <li key={index}>
-                    <SongCard
-                      audioName={result.audioName}
-                      similarity={result.similarity}
-                      mapper={mapper}
-                      onPlay={() => handlePlay(result.audioName)}
-                      isLoading={loading}
-                    />
-                  </li>
-                ))}
-              </ul>
+            ) : (
+              <>
+                {currentPredictionResults.length > 0 ? (
+                  currentPredictionResults.map(([name, value], index) => (
+                    <li key={index}>
+                      <SongCard
+                        audioName={name}
+                        picName={name}
+                        mapper={mapper}
+                        onPlay={() => handlePlay(name)}
+                        isLoading={loading}
+                        similarity={value}
+                        distance={value}
+                      />
+                    </li>
+                  ))
+                ) : (
+                  <p>No prediction results available.</p>
+                )}
+              </>
             )}
           </ul>
         </div>
@@ -262,7 +160,7 @@ export default function Home() {
                     : "bg-secondary"
                 }`}
                 onClick={() => handlePageChange(index + 1)}
-                disabled={loading} // Disable page navigation while loading
+                disabled={loading}
               >
                 {index + 1}
               </button>
