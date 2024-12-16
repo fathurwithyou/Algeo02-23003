@@ -22,12 +22,11 @@ const SongCard: React.FC<SongCardProps> = ({
   onPlay,
   isLoading,
   similarity,
-  distance,
 }) => {
   let finalAudioName = audioName;
   let finalPicName = picName;
   let finalSimilarity = similarity;
-  let finalDistance = distance;
+  let finalDistance = similarity;
 
   if (
     audioName &&
@@ -38,7 +37,7 @@ const SongCard: React.FC<SongCardProps> = ({
     finalPicName = audioName;
     finalAudioName = undefined;
     finalSimilarity = undefined;
-    finalDistance = distance;
+    finalDistance = similarity;
   }
 
   const imageName =
@@ -71,7 +70,7 @@ const SongCard: React.FC<SongCardProps> = ({
           {finalSimilarity !== undefined && (
             <p>Similarity: {(finalSimilarity * 100).toFixed(2)}%</p>
           )}
-          {finalDistance !== undefined && (
+          {finalAudioName == undefined && (
             <p>Distance: {finalDistance.toFixed(2)}</p>
           )}
         </div>
