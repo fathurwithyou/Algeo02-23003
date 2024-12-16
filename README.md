@@ -47,8 +47,7 @@ Pada **Terminal 2**:
 ```bash
 cd ./src/frontend
 npm install
-npm run build
-npm start
+npm run dev
 ```
 
 
