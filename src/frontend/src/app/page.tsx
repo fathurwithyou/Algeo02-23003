@@ -121,6 +121,7 @@ export default function Home() {
         distance: item[1],
       }));
       setImagePredictionResult(mappedResults);
+      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictImage(true);
       setIsPredictAudio(false);
       fetchMapper();
@@ -151,6 +152,7 @@ export default function Home() {
         similarity: item[1],
       }));
       setAudioPredictionResult(mappedResults);
+      setTotalPages(Math.ceil(mappedResults.length / ITEMS_PER_PAGE));
       setIsPredictAudio(true);
       setIsPredictImage(false);
       fetchMapper();
@@ -171,6 +173,14 @@ export default function Home() {
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentAudioFiles = audioFiles.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+  const currentImagePredictionResults = imagePredictionResult.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+  const currentAudioPredictionResults = audioPredictionResult.slice(
     startIndex,
     startIndex + ITEMS_PER_PAGE
   );
@@ -241,7 +251,7 @@ export default function Home() {
             )}
             {isPredictImage && !isPredictAudio && (
               <ul>
-                {imagePredictionResult.map((result, index) => (
+                {currentImagePredictionResults.map((result, index) => (
                   <li key={index}>
                     <SongCard
                       picName={result.picName}
@@ -256,7 +266,7 @@ export default function Home() {
             )}
             {isPredictAudio && !isPredictImage && (
               <ul>
-                {audioPredictionResult.map((result, index) => (
+                {currentAudioPredictionResults.map((result, index) => (
                   <li key={index}>
                     <SongCard
                       audioName={result.audioName}
@@ -272,25 +282,23 @@ export default function Home() {
           </ul>
         </div>
 
-        {!isPredictAudio && !isPredictImage && (
-          <div className="flex justify-center mt-4">
-            {totalPages > 1 &&
-              Array.from({ length: totalPages }, (_, index) => (
-                <button
-                  key={index}
-                  className={`px-4 py-2 mx-1 ${
-                    currentPage === index + 1
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                  onClick={() => handlePageChange(index + 1)}
-                  disabled={loading} // Disable page navigation while loading
-                >
-                  {index + 1}
-                </button>
-              ))}
-          </div>
-        )}
+        <div className="flex justify-center mt-4">
+          {totalPages > 1 &&
+            Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index}
+                className={`px-4 py-2 mx-1 ${
+                  currentPage === index + 1
+                    ? "bg-blue-500 text-white"
+                    : "bg-secondary"
+                }`}
+                onClick={() => handlePageChange(index + 1)}
+                disabled={loading} // Disable page navigation while loading
+              >
+                {index + 1}
+              </button>
+            ))}
+        </div>
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
