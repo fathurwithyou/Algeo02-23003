@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
 
@@ -12,7 +12,7 @@ export default function Home() {
   const [mapper, setMapper] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [useMapper, setUseMapper] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -85,20 +85,6 @@ export default function Home() {
   const resetMapper = () => {
     setMapper({});
     setUseMapper(false);
-  };
-
-  const handleFileSelect = async (fileName: string) => {
-    try {
-      const response = await fetch(`/api/audio-files?filename=${fileName}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch file");
-      }
-      const fileBlob = await response.blob();
-      const file = new File([fileBlob], fileName, { type: fileBlob.type });
-      setSelectedFile(file);
-    } catch (error) {
-      console.error("Error fetching file:", error);
-    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,6 +164,11 @@ export default function Home() {
     setIsPredictAudio(false);
   };
 
+  const handlePlay = (audioName: string) => {
+    const audioPath = `/audio/${audioName}`;
+    setSelectedFile(audioPath);
+  };
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentAudioFiles = audioFiles.slice(
     startIndex,
@@ -238,7 +229,7 @@ export default function Home() {
                       <SongCard
                         audioName={file}
                         picName={useMapper ? mapper[file] : undefined}
-                        onPlay={() => {}}
+                        onPlay={() => handlePlay(file)}
                         isLoading={loading}
                       />
                     </li>
@@ -271,7 +262,7 @@ export default function Home() {
                       audioName={result.audioName}
                       similarity={result.similarity}
                       mapper={mapper}
-                      onPlay={() => {}}
+                      onPlay={() => handlePlay(result.audioName)}
                       isLoading={loading}
                     />
                   </li>
@@ -303,7 +294,7 @@ export default function Home() {
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
-        <AudioPlayer file={selectedFile} />
+        <AudioPlayer src={selectedFile} />
       </div>
     </div>
   );
