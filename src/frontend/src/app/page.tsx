@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import AudioPlayer from "../components/audio/audio-player";
 import SongCard from "@/components/ui/song-card";
+import { useAudioRecorder, AudioRecorder } from "react-audio-voice-recorder";
 
 const ITEMS_PER_PAGE = 5;
+const RECORD_TIME = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
@@ -25,6 +27,9 @@ export default function Home() {
   >([]);
   const [isPredictImage, setIsPredictImage] = useState(false);
   const [isPredictAudio, setIsPredictAudio] = useState(false);
+  const recorderControls = useAudioRecorder();
+
+  const [audioUrl, setAudioUrl] = useState<any>(null);
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
@@ -185,6 +190,28 @@ export default function Home() {
     startIndex + ITEMS_PER_PAGE
   );
 
+  const recordComplete = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    setAudioUrl(url); // Store the URL in state
+    // download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "audio.wav";
+    a.click();
+  };
+
+  useEffect(() => {
+    if (recorderControls.recordingTime == RECORD_TIME + 1) {
+      recorderControls.stopRecording();
+    }
+  }, [recorderControls.recordingTime]);
+
+  useEffect(() => {
+    if (recorderControls.recordingTime == RECORD_TIME + 1) {
+      recorderControls.stopRecording();
+    }
+  }, [recorderControls.recordingTime]);
+
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
@@ -207,6 +234,17 @@ export default function Home() {
             onClick={resetPredictions}
           >
             Reset Predictions
+          </button>
+          {/* recorder */}
+
+          <div style={{ display: "none" }}>
+            <AudioRecorder
+              onRecordingComplete={(blob) => recordComplete(blob)}
+              recorderControls={recorderControls}
+            />
+          </div>
+          <button onClick={recorderControls.startRecording}>
+            Start recording
           </button>
 
           <div className="mt-4">
