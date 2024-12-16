@@ -39,40 +39,46 @@ class AudioProcessor:
                     last_note = midi_note
 
         midi.save(midi_file)
-    
+        
     def mp3tomidi(self, mp3_file, midi_file):
-        """
-        Convert an MP3 file to a MIDI file by estimating pitches.
-        """
-        y, sr = librosa.load(mp3_file, sr=22050)  
-        
-        y_harmonic = librosa.effects.harmonic(y)
-        
-        pitches, magnitudes = librosa.piptrack(y=y_harmonic, sr=sr, fmin=50.0, fmax=2000.0)
-        
-        midi = MidiFile()
-        track = MidiTrack()
-        midi.tracks.append(track)
-
-        threshold = 0.2
-        last_note = None
-        time_step = 480
-        
-        for time_idx in range(pitches.shape[1]):
-            pitch = pitches[:, time_idx]
-            magnitude = magnitudes[:, time_idx]
+            """
+            Convert an MP3 file to a MIDI file by estimating pitches.
+            """
+            # Load the MP3 file
+            y, sr = librosa.load(mp3_file, sr=22050)
             
-            idx = magnitude.argmax()
-            if magnitude[idx] > threshold:
-                midi_note = librosa.hz_to_midi(pitch[idx])
-                midi_note = int(np.round(midi_note))
-                
-                if midi_note != last_note:
-                    track.append(Message('note_on', note=midi_note, velocity=64, time=0))
-                    track.append(Message('note_off', note=midi_note, velocity=64, time=time_step))
-                    last_note = midi_note
+            # Harmonic separation for pitch tracking
+            y_harmonic = librosa.effects.harmonic(y)
+            
+            pitches, magnitudes = librosa.piptrack(y=y_harmonic, sr=sr, fmin=50.0, fmax=2000.0)
+            
+            # Create MIDI file and track
+            midi = MidiFile()
+            track = MidiTrack()
+            midi.tracks.append(track)
 
-        midi.save(midi_file)
+            threshold = 0.1  
+            last_note = None
+            hop_length = 512  
+            time_step = int((hop_length / sr) * 1000)  
+            
+            # Process each frame
+            for time_idx in range(pitches.shape[1]):
+                pitch = pitches[:, time_idx]
+                magnitude = magnitudes[:, time_idx]
+                
+                idx = magnitude.argmax()
+                if magnitude[idx] > threshold and pitch[idx] > 0: 
+                    midi_note = librosa.hz_to_midi(pitch[idx])
+                    midi_note = int(np.round(midi_note))
+                    
+                    if midi_note != last_note:
+                        velocity = int(np.clip(magnitude[idx] * 127, 0, 127)) 
+                        track.append(Message('note_on', note=midi_note, velocity=velocity, time=0))
+                        track.append(Message('note_off', note=midi_note, velocity=velocity, time=time_step))
+                        last_note = midi_note
+            
+            midi.save(midi_file)
     
     def wav2midi(self, wav_file, midi_file):
         """

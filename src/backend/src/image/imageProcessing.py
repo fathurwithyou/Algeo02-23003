@@ -59,8 +59,7 @@ class PCAProcessor:
         """Fit PCA to the image dataset using SVD."""
         self.mean_image = np.mean(images, axis=0)
         centered_data = images - self.mean_image
-        cov_matrix = np.cov(centered_data, rowvar=False)
-        U, _, Vt = svd(cov_matrix, full_matrices=False)
+        U, _, Vt = svd(centered_data, full_matrices=False)
         self.components = Vt[:self.n_components]
 
     def transform(self, images):
