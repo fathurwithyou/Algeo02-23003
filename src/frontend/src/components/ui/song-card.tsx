@@ -1,24 +1,26 @@
 import React, { useState } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
 
 type SongCardProps = {
-  fileName: string;
+  audioName?: string;
+  picName?: string;
+  mapper?: Record<string, string>;
   onPlay: () => void;
   isLoading: boolean;
-  // index: number;
-  image?: string;
 };
 
 const SongCard: React.FC<SongCardProps> = ({
-  fileName,
+  audioName,
+  picName,
+  mapper,
   onPlay,
   isLoading,
-  // index,
-  image,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const imageName = audioName && mapper?.[audioName] ? mapper[audioName] : null;
+  const songName = picName && mapper?.[picName] ? mapper[picName] : null;
 
   return (
     <div
@@ -37,15 +39,16 @@ const SongCard: React.FC<SongCardProps> = ({
         </Button>
       ) : (
         <div className="w-9 h-9 flex items-center justify-center text-gray-500">
-          {/* {index + 1} */}
-          {image ? (
-            <Image src={image} alt="Song Image" width={36} height={36} />
+          {picName ? (
+            <p>{picName}</p>
+          ) : imageName ? (
+            <p>{imageName}</p>
           ) : (
             <p>Image Not Provided</p>
           )}
         </div>
       )}
-      <span className="text-lg font-medium">{fileName}</span>
+      <span className="text-lg font-medium">{audioName || songName}</span>
     </div>
   );
 };

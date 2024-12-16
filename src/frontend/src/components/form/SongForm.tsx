@@ -15,13 +15,20 @@ import {
 import { Input } from "@/components/ui/input";
 import AudioPlayer from "../audio/audio-player";
 
-// Validation schema
 export const formSchema = z.object({
   songs: z
     .array(z.instanceof(File))
-    .refine((files) => files.every((file) => file?.type.startsWith("audio/")), {
-      message: "Please upload valid audio files.",
-    }),
+    .refine(
+      (files) =>
+        files.every(
+          (file) =>
+            file?.type.startsWith("audio/") ||
+            file?.name.toLowerCase().endsWith(".zip")
+        ),
+      {
+        message: "Please upload valid audio or zip files.",
+      }
+    ),
 });
 
 export function SongForm() {
@@ -75,7 +82,7 @@ export function SongForm() {
                   }}
                   id="songs"
                   type="file"
-                  accept="audio/*"
+                  accept="audio/*,.zip"
                   multiple
                 />
               </FormControl>

@@ -6,24 +6,20 @@ export const POST = async (req: NextRequest) => {
     const formData = await req.formData();
     console.log("FormData keys:", Array.from(formData.keys()));
 
-    const files = formData.getAll("files");
+    const file = formData.get("file");
 
-    if (
-      !files ||
-      files.length === 0 ||
-      !files.every((file) => file instanceof File)
-    ) {
-      console.error("Invalid files received:", files);
+    if (!file || !(file instanceof File)) {
+      console.error("Invalid file received:", file);
       return NextResponse.json(
-        { error: "No valid files received." },
+        { error: "No valid file received." },
         { status: 400 }
       );
     }
 
-    const backendUrl = "http://localhost:5000/upload-mapper/";
+    const backendUrl = "http://localhost:5000/upload/mapper";
 
     const backendFormData = new FormData();
-    files.forEach((file) => backendFormData.append("file", file));
+    backendFormData.append("file", file);
 
     const response = await fetch(backendUrl, {
       method: "POST",

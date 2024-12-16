@@ -6,3 +6,5 @@ results
 __pycache__
 image/__pycache__
 train.*
+
+/public

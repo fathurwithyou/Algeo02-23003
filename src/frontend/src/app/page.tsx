@@ -8,21 +8,25 @@ const ITEMS_PER_PAGE = 5;
 
 export default function Home() {
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<string[]>([]);
+  const [mapper, setMapper] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false); // Loading state for fetch requests
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [useMapper, setUseMapper] = useState(false);
 
   useEffect(() => {
     const fetchAudioFiles = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/audio-files?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
-        );
+        const response = await fetch("http://localhost:5000/get/songs");
+        if (!response.ok) {
+          throw new Error("Failed to fetch audio files");
+        }
         const data = await response.json();
-        setAudioFiles(data.files);
-        setTotalPages(data.totalPages);
+        setAudioFiles(data.songs);
+        setTotalPages(Math.ceil(data.songs.length / ITEMS_PER_PAGE));
       } catch (error) {
         console.error("Error fetching audio files:", error);
       } finally {
@@ -30,31 +34,80 @@ export default function Home() {
       }
     };
 
+    const fetchImageFiles = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:5000/get/songs");
+        if (!response.ok) {
+          throw new Error("Failed to fetch image files");
+        }
+        const data = await response.json();
+        setImageFiles(data.images);
+      } catch (error) {
+        console.error("Error fetching image files:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchAudioFiles();
-  }, [currentPage]);
+    fetchImageFiles();
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handleFileSelect = (fileName: string) => {
-    const filePath = `/songs/${fileName}`;
-    setSelectedFilePath(filePath); // Pass the file path as a string
+  const fetchMapper = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/get/mapper");
+      if (!response.ok) {
+        throw new Error("Failed to fetch mapper");
+      }
+      const mapperData = await response.json();
+      setMapper(mapperData);
+      setUseMapper(true);
+    } catch (error) {
+      console.error("Error fetching mapper:", error);
+    }
   };
+
+  const resetMapper = () => {
+    setMapper({});
+    setUseMapper(false);
+  };
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentAudioFiles = audioFiles.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
 
   return (
     <div className="flex-grow flex flex-col justify-between">
       <div className="h-full p-4 flex flex-col justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
+          <button
+            className="px-4 py-2 bg-blue-500 text-white mb-4"
+            onClick={fetchMapper}
+          >
+            Use Mapper
+          </button>
+          <button
+            className="px-4 py-2 bg-red-500 text-white mb-4"
+            onClick={resetMapper}
+          >
+            Reset Mapper
+          </button>
           <ul>
-            {audioFiles?.length ?? 0 > 0 ? (
-              audioFiles.map((file, index) => (
+            {currentAudioFiles.length > 0 ? (
+              currentAudioFiles.map((file, index) => (
                 <li key={index}>
                   <SongCard
-                    // index={(currentPage - 1) * ITEMS_PER_PAGE + index}
-                    fileName={file}
-                    onPlay={() => handleFileSelect(file)}
+                    audioName={file}
+                    picName={useMapper ? mapper[file] : undefined}
+                    onPlay={() => {}}
                     isLoading={loading}
                   />
                 </li>
@@ -85,14 +138,8 @@ export default function Home() {
       </div>
 
       <div className="w-full h-fit flex flex-row justify-center items-center">
-        <AudioPlayer src={selectedFilePath} />
+        <AudioPlayer file={selectedFile} />
       </div>
-
-      {/* {loading && (
-          <div className="absolute top-0 left-0 w-full h-full bg-gray-300 opacity-50 flex justify-center items-center text-xl">
-            Loading...
-          </div>
-        )} */}
     </div>
   );
 }

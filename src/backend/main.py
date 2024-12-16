@@ -1,8 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from src.image.imageRetriever import ImageRetriever
 import os
 import json
+import zipfile
+
+mapper = {}
 
 # Load settings
 with open('settings.json', 'r') as f:
@@ -11,98 +14,151 @@ with open('settings.json', 'r') as f:
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/upload-image/', methods=['POST'])
-def upload_image():
+@app.route('/get/images', methods=['GET'])
+def get_images():
+    """Endpoint to retrieve all image file names from the public/images directory."""
+    try:
+        directory = "public/images/"
+        if not os.path.exists(directory):
+            return jsonify({"error": "Images directory does not exist."}), 404
+
+        image_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        return jsonify({"images": image_files}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get/songs', methods=['GET'])
+def get_songs():
+    """Endpoint to retrieve all audio file names from the public/songs directory."""
+    try:
+        directory = "public/songs/"
+        if not os.path.exists(directory):
+            return jsonify({"error": "Songs directory does not exist."}), 404
+
+        song_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        return jsonify({"songs": song_files}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get/mapper', methods=['GET'])
+def get_mapper():
+    """Endpoint to retrieve the mapper."""
+    print("Mapper content:", mapper)
+    return jsonify(mapper)
+
+@app.route('/upload/mapper', methods=['POST'])
+def upload_mapper():
+    """
+    Aligning to proper mapper structure
+    """
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+            return jsonify({"error": "No file part in the request."}), 400
 
         file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+        file_content = file.read().decode('utf-8')
+        
+        try:
+            json_data = json.loads(file_content)
+        except json.JSONDecodeError as e:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+        for item in json_data:
+            mapper[item["audio_file"]] = item["pic_name"]
+            mapper[item["pic_name"]] = item["audio_file"]
+        
+        print("Mapper content:", mapper)
+        
+        return jsonify({"message": "Mapper uploaded successfully."}), 200
+    
+    except Exception as e:
+        print("Error:", e)  # Log the exception
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/upload/image', methods=['POST'])
+def upload_image():
+    try:
+        if 'files' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+
+        files = request.files.getlist('files')
+        if not files:
+            return jsonify({"error": "No selected files"}), 400
 
         image_extensions = [".jpg", ".jpeg", ".png"]
         directory = "public/images/"
-        filename = file.filename.replace(" ", "_")
-        extension = os.path.splitext(filename)[1].lower()
-
-        if extension not in image_extensions:
-            return jsonify({"error": "Invalid file type received."}), 400
-
         os.makedirs(directory, exist_ok=True)
 
         # Delete previous files in the directory
         for existing_file in os.listdir(directory):
             os.remove(os.path.join(directory, existing_file))
 
-        file_path = os.path.join(directory, filename)
-        file.save(file_path)
+        for file in files:
+            filename = file.filename
+            extension = os.path.splitext(filename)[1].lower()
 
-        return jsonify({"message": "File uploaded successfully"}), 201
+            if extension == ".zip":
+                with zipfile.ZipFile(file) as zip_file:
+                    for zip_info in zip_file.infolist():
+                        zip_filename = zip_info.filename
+                        zip_extension = os.path.splitext(zip_filename)[1].lower()
+                        if zip_extension in image_extensions:
+                            with zip_file.open(zip_info) as image_file:
+                                image_path = os.path.join(directory, zip_filename)
+                                with open(image_path, 'wb') as output_file:
+                                    output_file.write(image_file.read())
+            elif extension in image_extensions:
+                file_path = os.path.join(directory, filename)
+                file.save(file_path)
+            else:
+                return jsonify({"error": f"Invalid file type received: {filename}"}), 400
+        return jsonify({"message": "Files uploaded successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/upload-audio/', methods=['POST'])
+@app.route('/upload/audio', methods=['POST'])
 def upload_audio():
     try:
-        if 'file' not in request.files:
+        if 'files' not in request.files:
             return jsonify({"error": "No file part"}), 400
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+        files = request.files.getlist('files')
+        if not files:
+            return jsonify({"error": "No selected files"}), 400
 
         audio_extensions = [".wav", ".mp3", ".m4a", ".mid"]
         directory = "public/songs/"
-        filename = file.filename.replace(" ", "_")
-        extension = os.path.splitext(filename)[1].lower()
-
-        if extension not in audio_extensions:
-            return jsonify({"error": "Invalid file type received."}), 400
-
         os.makedirs(directory, exist_ok=True)
 
-        # Delete previous files in the directory
         for existing_file in os.listdir(directory):
             os.remove(os.path.join(directory, existing_file))
 
-        file_path = os.path.join(directory, filename)
-        file.save(file_path)
+        for file in files:
+            filename = file.filename
+            extension = os.path.splitext(filename)[1].lower()
 
-        return jsonify({"message": "File uploaded successfully"}), 201
+            if extension == ".zip":
+                with zipfile.ZipFile(file) as zip_file:
+                    for zip_info in zip_file.infolist():
+                        zip_filename = zip_info.filename
+                        zip_extension = os.path.splitext(zip_filename)[1].lower()
+                        if zip_extension in audio_extensions:
+                            with zip_file.open(zip_info) as audio_file:
+                                audio_path = os.path.join(directory, zip_filename)
+                                with open(audio_path, 'wb') as output_file:
+                                    output_file.write(audio_file.read())
+            elif extension in audio_extensions:
+                file_path = os.path.join(directory, filename)
+                file.save(file_path)
+            else:
+                return jsonify({"error": f"Invalid file type received: {filename}"}), 400
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/upload-mapper/', methods=['POST'])
-def upload_mapper():
-    try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
-
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
-        mapper_extensions = [".txt", ".json"]
-        directory = "public/mapper/"
-        filename = file.filename.replace(" ", "_")
-        extension = os.path.splitext(filename)[1].lower()
-
-        if extension not in mapper_extensions:
-            return jsonify({"error": "Invalid file type received."}), 400
-
-        os.makedirs(directory, exist_ok=True)
-
-        # Delete previous files in the directory
-        for existing_file in os.listdir(directory):
-            os.remove(os.path.join(directory, existing_file))
-
-        file_path = os.path.join(directory, filename)
-        file.save(file_path)
-
-        return jsonify({"message": "File uploaded successfully"}), 201
+        return jsonify({"message": "Files uploaded successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

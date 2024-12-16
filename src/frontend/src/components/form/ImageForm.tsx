@@ -18,9 +18,17 @@ import { useImagePreviewStore } from "@/store/useImagePreviewStore";
 export const formSchema = z.object({
   images: z
     .array(z.instanceof(File))
-    .refine((files) => files.every((file) => file?.type.startsWith("image/")), {
-      message: "Please upload valid image files.",
-    }),
+    .refine(
+      (files) =>
+        files.every(
+          (file) =>
+            file?.type.startsWith("image/") ||
+            file?.name.toLowerCase().endsWith(".zip")
+        ),
+      {
+        message: "Please upload valid image or zip files.",
+      }
+    ),
 });
 
 export function ImageForm() {
@@ -77,7 +85,7 @@ export function ImageForm() {
                   }}
                   id="images"
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.zip"
                   multiple
                 />
               </FormControl>
