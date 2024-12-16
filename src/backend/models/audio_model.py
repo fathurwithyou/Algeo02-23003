@@ -19,7 +19,7 @@ class AudioModel:
         self.model.fit(audio_folder)
 
     def predict(self, audio_file):
-        if not audio_file.filename.lower().endswith((".wav", ".midi", ".mid")):
+        if not audio_file.filename.lower().endswith((".wav", ".midi", ".mid", ".mp3", ".m4a")):
             raise ValueError("Invalid file type. Only WAV and MIDI are allowed.")
 
         query_path = os.path.join(self.audio_query, audio_file.filename)
