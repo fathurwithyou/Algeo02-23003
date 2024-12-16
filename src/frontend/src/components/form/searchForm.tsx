@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoaderIcon, CheckIcon, XIcon, SearchIcon } from "lucide-react"; // Import icons from lucide-react
+import { useSetPrediction } from "@/store/usePredictionStore"; // Import the prediction store
 
 export const formSchema = z.object({
   predictions: z
@@ -35,6 +36,7 @@ export function SearchForm() {
     "idle" | "success" | "error"
   >("idle");
   const [isHovered, setIsHovered] = useState(false);
+  const setPrediction = useSetPrediction();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,18 +55,32 @@ export function SearchForm() {
 
     try {
       const formData = new FormData();
-      values.predictions.forEach((file) => {
-        formData.append("file", file);
-      });
+      const file = values.predictions[0]; // Assuming only one file is uploaded at a time
 
-      const response = await fetch("/api/predict", {
+      let backendUrl = "";
+      if (file.type.startsWith("audio/")) {
+        backendUrl = "http://localhost:5000/predict/audio";
+        formData.append("audio", file);
+      } else if (file.type.startsWith("image/")) {
+        backendUrl = "http://localhost:5000/predict/image";
+        formData.append("image", file);
+      } else {
+        console.error("Unsupported file type received:", file.type);
+        setUploadStatus("error");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(backendUrl, {
         method: "POST",
         body: formData,
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        console.log("Files uploaded successfully");
         form.reset({ predictions: [] });
+        setPrediction(result);
         setUploadStatus("success");
         setTimeout(() => setUploadStatus("idle"), 2000);
         setIsHovered(false);
@@ -82,7 +98,7 @@ export function SearchForm() {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
           control={form.control}
           name="predictions"
@@ -93,7 +109,6 @@ export function SearchForm() {
                   <Input
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
-                      console.log("Selected files:", files);
                       field.onChange(files);
                       if (files.length > 0) {
                         form.handleSubmit(onSubmit)();

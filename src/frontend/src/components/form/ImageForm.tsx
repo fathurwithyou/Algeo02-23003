@@ -59,7 +59,6 @@ export function ImageForm() {
 
     setIsLoading(true);
     setUploadStatus("idle");
-    console.log("hello");
 
     try {
       const formData = new FormData();
@@ -104,7 +103,6 @@ export function ImageForm() {
                   <Input
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
-                      console.log("Selected files:", files);
                       field.onChange(files);
                       if (files.length > 0) {
                         form.handleSubmit(onSubmit)();
