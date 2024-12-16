@@ -8,3 +8,5 @@ image/__pycache__
 models/__pycache__
 
 train.*
+
+/public

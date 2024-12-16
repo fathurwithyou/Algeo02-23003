@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from models.image_model import ImageModel
 from models.audio_model import AudioModel
@@ -8,20 +8,85 @@ import zipfile
 import shutil
 import patoolib
 
+mapper = {}
+
 try:
     with open('settings.json', 'r') as f:
         settings = json.load(f)
 except FileNotFoundError:
     raise FileNotFoundError("settings.json file is missing. Please provide a valid configuration file.")
 
-app = Flask(__name__)
-CORS(app)
-
 image_model = ImageModel(settings["IMAGE_CONFIG"])
 audio_model = AudioModel(settings["AUDIO_CONFIG"])
 
-# 2 way mapper
-mapper = {}
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/get/images', methods=['GET'])
+def get_images():
+    """Endpoint to retrieve all image file names from the public/images directory."""
+    try:
+        directory = "data/image/"
+        if not os.path.exists(directory):
+            return jsonify({"error": "Images directory does not exist."}), 404
+
+        image_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        return jsonify({"images": image_files}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get/songs', methods=['GET'])
+def get_songs():
+    """Endpoint to retrieve all audio file names from the public/songs directory."""
+    try:
+        directory = "data/audio/"
+        if not os.path.exists(directory):
+            return jsonify({"error": "Songs directory does not exist."}), 404
+
+        song_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+        return jsonify({"songs": song_files}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get/mapper', methods=['GET'])
+def get_mapper():
+    """Endpoint to retrieve the mapper."""
+    print("Mapper content:", mapper)
+    return jsonify(mapper)
+
+@app.route('/upload/mapper', methods=['POST'])
+def upload_mapper():
+    """
+    Aligning to proper mapper structure
+    """
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part in the request."}), 400
+
+        file = request.files['file']
+        file_content = file.read().decode('utf-8')
+        
+        try:
+            json_data = json.loads(file_content)
+        except json.JSONDecodeError as e:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+        for item in json_data:
+            mapper[item["audio_file"]] = item["pic_name"]
+            mapper[item["pic_name"]] = item["audio_file"]
+        
+        print("Mapper content:", mapper)
+        
+        return jsonify({"message": "Mapper uploaded successfully."}), 200
+    
+    except Exception as e:
+        print("Error:", e)  # Log the exception
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/reset', methods=['GET'])
 def reset():
@@ -49,42 +114,6 @@ def reset():
         
     return jsonify({"message": "API reset successful."}), 200
 
-@app.route('/get/allimages', methods=['GET'])
-def get_all_images():
-    """Endpoint to retrieve all images and send"""
-    
-@app.route('/get/mapper', methods=['GET'])
-def get_mapper():
-    """Endpoint to retrieve the mapper."""
-    return jsonify(mapper)
-
-@app.route('/upload/mapper', methods=['POST'])
-def upload_mapper():
-    try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part in the request."}), 400
-
-        file = request.files['file']
-        
-        if file.filename.split('.')[-1] == 'txt':
-            json_file = []
-            for line in file:
-                line = line.decode('utf-8').strip()
-                if line:
-                    audio_file, pic_name = line.split()
-                    json_file.append({"audio_file": audio_file, "pic_name": pic_name})
-            
-        elif file.filename.split('.')[-1] == 'json':
-            json_file = json.loads(file.read())
-        
-        for i in json_file:
-            mapper[i["audio_file"]] = i["pic_name"]
-            mapper[i["pic_name"]] = i["audio_file"] 
-    
-        return jsonify({"message": "Mapper uploaded successfully."}), 200
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
     
 
 @app.route('/audio', methods=['POST'])
@@ -217,7 +246,7 @@ def predict_image():
     try:
         if 'image' not in request.files:
             return jsonify({"error": "No image file provided."}), 400
-
+        
         image_file = request.files['image']
         
         if image_model.is_fit() == False:
@@ -225,7 +254,6 @@ def predict_image():
         
         result = image_model.predict(image_file)
         return jsonify(result), 200
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -306,3 +334,6 @@ def health_check():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+if __name__ == '__main__':
+    app.run(debug=True)

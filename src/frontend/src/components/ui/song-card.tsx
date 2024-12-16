@@ -3,19 +3,28 @@ import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
 
 type SongCardProps = {
-  fileName: string;
+  audioName?: string;
+  picName?: string;
+  mapper?: Record<string, string>;
   onPlay: () => void;
   isLoading: boolean;
-  index: number;
+  similarity?: number;
+  distance?: number;
 };
 
 const SongCard: React.FC<SongCardProps> = ({
-  fileName,
+  audioName,
+  picName,
+  mapper,
   onPlay,
   isLoading,
-  index,
+  similarity,
+  distance,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const imageName = audioName && mapper?.[audioName] ? mapper[audioName] : null;
+  const songName = picName && mapper?.[picName] ? mapper[picName] : null;
 
   return (
     <div
@@ -34,10 +43,24 @@ const SongCard: React.FC<SongCardProps> = ({
         </Button>
       ) : (
         <div className="w-9 h-9 flex items-center justify-center text-gray-500">
-          {index + 1}
+          {picName ? (
+            <p>{picName}</p>
+          ) : imageName ? (
+            <p>{imageName}</p>
+          ) : (
+            <p>Image Not Provided</p>
+          )}
         </div>
       )}
-      <span className="text-lg font-medium">{fileName}</span>
+      <span className="text-lg font-medium">{audioName || songName}</span>
+      {(similarity !== undefined || distance !== undefined) && (
+        <div className="text-sm text-gray-500">
+          {similarity !== undefined && (
+            <p>Similarity: {(similarity * 100).toFixed(2)}%</p>
+          )}
+          {distance !== undefined && <p>Distance: {distance.toFixed(2)}</p>}
+        </div>
+      )}
     </div>
   );
 };

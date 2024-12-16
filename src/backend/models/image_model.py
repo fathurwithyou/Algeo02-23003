@@ -13,6 +13,7 @@ class ImageModel:
         self.resize_shape = tuple(config.get("resize_shape", (64, 64)))
         self.model = ImageRetriever(n_components=self.n_components, resize_shape=self.resize_shape)
         os.makedirs(self.image_folder, exist_ok=True)
+        os.makedirs(self.image_query, exist_ok=True)
     
     def fit(self, image_folder):    
         self.model.fit(image_folder)

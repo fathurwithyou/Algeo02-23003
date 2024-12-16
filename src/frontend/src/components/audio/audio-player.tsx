@@ -7,10 +7,11 @@ import Progress from "../ui/progress";
 import { Card, CardContent } from "../ui/card";
 
 type AudioPlayerProps = {
-  file: File | null;
+  file?: File | null; // Accepts a File object
+  src?: string | null; // Accepts a source URL as a string
 };
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ file, src }) => {
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -26,18 +27,32 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
       const objectUrl = URL.createObjectURL(file);
       setAudioSrc(objectUrl);
       setFileName(file.name);
-      setIsPlaying(true);
-      setProgress(0);
-      setCurrentTime(0);
-      if (audioRef.current) {
-        audioRef.current.src = objectUrl;
-        audioRef.current.play();
-      }
+    } else if (src) {
+      setAudioSrc(src);
+      setFileName(decodeURI(src.split("/").pop() || "Unknown"));
     } else {
       setAudioSrc(null);
       setFileName(null);
     }
-  }, [file]);
+
+    if (audioRef.current) {
+      setProgress(0);
+      setCurrentTime(0);
+      setIsPlaying(false);
+      audioRef.current.pause();
+    }
+  }, [file, src]);
+
+  // useEffect(() => {
+  //   if (audioSrc && audioRef.current) {
+  //     setProgress(0);
+  //     setCurrentTime(0);
+  //     setIsPlaying(false);
+  //     audioRef.current.pause();
+  //     audioRef.current.play();
+  //     setIsPlaying(true);
+  //   }
+  // }, [audioSrc]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -83,17 +98,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
   };
 
   const handleMouseDown = () => {
-    if (audioRef.current) {
-      isDragging.current = true;
-      audioRef.current.pause();
-    }
+    isDragging.current = true;
+    audioRef.current?.pause();
   };
 
   const handleMouseUp = () => {
-    if (audioRef.current && isDragging.current) {
+    if (isDragging.current) {
       isDragging.current = false;
       if (isPlaying) {
-        audioRef.current.play();
+        audioRef.current?.play();
       }
     }
   };
@@ -161,8 +174,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ file }) => {
           {audioSrc && (
             <audio
               ref={audioRef}
+              src={audioSrc}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
+              controls={false}
             />
           )}
         </CardContent>
