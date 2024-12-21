@@ -29,7 +29,8 @@ export const formSchema = z.object({
         files.every(
           (file) =>
             file?.type.startsWith("image/") ||
-            file?.name.toLowerCase().endsWith(".zip")
+            file?.name.toLowerCase().endsWith(".zip") ||
+            file?.name.toLowerCase().endsWith(".rar")
         ),
       {
         message: "Please upload valid image or zip files.",
@@ -110,7 +111,7 @@ export function ImageForm() {
                     }}
                     id="images"
                     type="file"
-                    accept=".jpg,.png,.jpeg,.zip"
+                    accept=".jpg,.png,.jpeg,.zip,.rar"
                     multiple
                     className="hidden"
                   />

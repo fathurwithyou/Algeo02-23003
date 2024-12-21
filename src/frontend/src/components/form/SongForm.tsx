@@ -29,7 +29,8 @@ export const formSchema = z.object({
         files.every(
           (file) =>
             file?.type.startsWith("audio/") ||
-            file?.name.toLowerCase().endsWith(".zip")
+            file?.name.toLowerCase().endsWith(".zip") ||
+            file?.name.toLowerCase().endsWith(".rar")
         ),
       {
         message: "Please upload valid audio or zip files.",
@@ -111,7 +112,7 @@ export function SongForm() {
                     }}
                     id="songs"
                     type="file"
-                    accept="audio/*,.zip"
+                    accept="audio/*,.zip,.rar"
                     multiple
                     className="hidden"
                   />
